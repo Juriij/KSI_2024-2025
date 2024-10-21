@@ -2,20 +2,26 @@
 
 from Pinguin import Gender, Pingu
 
-class Node:
-   def __init__(self, name):
-      self.name = name   # not sure, if necessary
-      self.visited = False
-
-
-
 
 TARGET_PENGUIN = "Karlík Veliký"
 
-
 def killPenguins(king: Pingu):
-   # TODO your solution here
-   pass
+   king.kill()
+   oldestAge = -1
+   new_king = None
+
+   for child in king.getChildren():
+      if child.getGender() == Gender.Male and child.getAge() > oldestAge:
+         new_king = child
+         oldestAge = child.getAge()
+
+   if new_king is not None: 
+      killPenguins(new_king)
+
+   
+
+
+
 
 
 # Primitive example algorithm that kills only the king and his first son
