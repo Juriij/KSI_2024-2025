@@ -29,6 +29,11 @@ def killPenguins(king: Pingu):
 ##### after coronation, program delves into a function with a new king
 
 
+##### idea: Before executing the king (king.kill()) check if he isn't Karlik Veliky.
+#####       If the current king is Karlik Veliky, don't kill him and cease the genocide (end program).
+
+
+
 
 
 
