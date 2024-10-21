@@ -18,7 +18,15 @@ def killPenguins(king: Pingu):
    if new_king is not None: 
       killPenguins(new_king)
 
-   
+
+##### idea: 1. While iterating over the king's children save all the sons into a data structure
+#####       2. In the data structure, sort the sons by the age
+#####       3. Loop over the sons and input each of them into killPenguins()
+#####
+##### After killing a king without a heir, the code exits the function, picks a brother, if there
+##### is no brother it exits the function and picks an uncle, if there is no uncle it exits 
+##### the function and picks a grand-uncle ...  
+##### after coronation, program delves into a function with a new king
 
 
 
