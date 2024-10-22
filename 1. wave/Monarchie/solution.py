@@ -4,7 +4,7 @@ from Pinguin import Gender, Pingu
 
 TARGET_PENGUIN = "Karlík Veliký"
 
-# O(s+ch + slogs) more effective approach utilizing O(1) searching complexity of dictionaries
+# O(s+2ch + slogs) more effective approach utilizing O(1) searching complexity of dictionaries
 def killPenguins(king: Pingu):
    if king.getName() == TARGET_PENGUIN:
       return True
@@ -68,7 +68,7 @@ def killPenguins(king: Pingu):
 
 
 
-# # O(s*ch + slogs)
+# # O(s*ch + ch + slogs)
 # def killPenguins(king: Pingu):
 #    if king.getName() == TARGET_PENGUIN:
 #       return True
