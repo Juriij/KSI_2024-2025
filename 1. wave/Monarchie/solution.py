@@ -4,29 +4,32 @@ from Pinguin import Gender, Pingu
 
 TARGET_PENGUIN = "Karlík Veliký"
 
+# O(s+ch + slogs) more effective approach utilizing O(1) searching complexity of dictionaries
 def killPenguins(king: Pingu):
    if king.getName() == TARGET_PENGUIN:
       return True
 
    else:
       king.kill()
-      sons_ages = []   # subject to change
+      sons_ages = []   
 
       for child in king.getChildren():
          if child.getGender() == Gender.MALE:
-            sons_ages.append(child.getAge())       # subject to change
+            sons_ages.append(child.getAge())       
 
       sons_ages.sort(reverse=True)
 
+      children = {node.getAge(): node for node in king.getChildren()}
+
+
       for age in sons_ages:
-         for child in king.getChildren(): 
-            if child.getGender() == Gender.MALE and child.getAge() == age:
-               Karlik_coronated = killPenguins(child)
-               if Karlik_coronated:
-                  return True
+         child = children[age] 
+         Karlik_coronated = killPenguins(child)
+         if Karlik_coronated:
+            return True
 
 
- 
+
 
 
 
@@ -62,3 +65,27 @@ def killPenguins(king: Pingu):
 #             oldestAge = p.getAge()
 #     if pingu is not None:
 #         pingu.kill()
+
+
+
+# # O(s*ch + slogs)
+# def killPenguins(king: Pingu):
+#    if king.getName() == TARGET_PENGUIN:
+#       return True
+
+#    else:
+#       king.kill()
+#       sons_ages = []   # subject to change
+
+#       for child in king.getChildren():
+#          if child.getGender() == Gender.MALE:
+#             sons_ages.append(child.getAge())       # subject to change
+
+#       sons_ages.sort(reverse=True)
+
+#       for age in sons_ages:
+#          for child in king.getChildren(): 
+#             if child.getAge() == age:
+#                Karlik_coronated = killPenguins(child)
+#                if Karlik_coronated:
+#                   return True
