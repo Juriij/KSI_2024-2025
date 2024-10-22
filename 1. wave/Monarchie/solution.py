@@ -2,21 +2,35 @@
 
 from Pinguin import Gender, Pingu
 
-
 TARGET_PENGUIN = "Karlík Veliký"
 
 def killPenguins(king: Pingu):
-   king.kill()
-   oldestAge = -1
-   new_king = None
+   if king.getName() == TARGET_PENGUIN:
+      return True
 
-   for child in king.getChildren():
-      if child.getGender() == Gender.Male and child.getAge() > oldestAge:
-         new_king = child
-         oldestAge = child.getAge()
+   else:
+      king.kill()
+      sons_ages = []   # subject to change
 
-   if new_king is not None: 
-      killPenguins(new_king)
+      for child in king.getChildren():
+         if child.getGender() == Gender.MALE:
+            sons_ages.append(child.getAge())       # subject to change
+
+      sons_ages.sort(reverse=True)
+
+      for age in sons_ages:
+         for child in king.getChildren(): 
+            if child.getGender() == Gender.MALE and child.getAge() == age:
+               Karlik_coronated = killPenguins(child)
+               if Karlik_coronated:
+                  return True
+
+
+ 
+
+
+
+
 
 
 ##### idea: 1. While iterating over the king's children save all the sons into a data structure
