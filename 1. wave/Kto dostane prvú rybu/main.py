@@ -2,36 +2,55 @@ from typing import List
 
 
 def solve(positions: List[int], velocities: List[int], queries: List[int]) -> List[List[int]]:
-    first_penguins = []
+
+    first_penguins = []  # [[position-indexes]]
     first_penguins_temp = {}  # {query-index: [position-indexes]}
     
-    queries = {value: index for index, value in enumerate(queries)} # {query:index} O(q)
+    queries_dict = {value: index for index, value in enumerate(queries)} # {query:index} O(q)
 
 
     # This loop checks if there are penguins located at all the LOL's possible positions
+
+    visited_queries_iter = set()  # variable that remembers queries visited for each iteration {query_value} 
     for i in range(len(positions)):   # O(n)
-        if positions[i] in queries:
+        if positions[i] in queries_dict:        
             penguin_index = i
-            visited_query_index = queries[positions[i]]
+            visited_query_index = queries_dict[positions[i]]
 
-
+            
             if visited_query_index not in first_penguins_temp:
-                first_penguins_temp[visited_query_index] = {positions[i]: []}  # Initialize with an empty list
+                first_penguins_temp[visited_query_index] = []  # Initialize with an empty list
 
-            # Now append the penguin_index safely
-            first_penguins_temp[visited_query_index][positions[i]].append(penguin_index)
+            # Make a log that a query has been visited by a peguin on index "penguin_index" == "x"
+            first_penguins_temp[visited_query_index].append(penguin_index)
+
+            # Make a log that query has been visited so that it can be popped at the end of iteration
+            visited_queries_iter.add(positions[i])
     
 
-    for key in first_penguins_temp:   # popping visited queries 
-        for key in first_penguins_temp[key]:
-            queries.pop(key)
-    
+    # Sorting penguin indexes
+    for key in first_penguins_temp:      # O(q) after all it will run "q" times
+        if len(first_penguins_temp[key]) != 1:
+            first_penguins_temp[key].sort()
+
+    # Popping visited queries
+    for query in visited_queries_iter:   # O(q) after all it will run "q" times
+        queries_dict.pop(query)
 
 
-    print(f'these are penguins that arrived: {first_penguins_temp}')
-    print(f'these are yet unvisited queries: {queries}')
+    # Clearing 
+    visited_queries_iter = set()
+
+    # print(f'visited queries: {first_penguins_temp}')
+    # print(f'unvisited queries: {queries_dict}')
     
+
     return first_penguins
+
+
+
+
+
 
 
                 
