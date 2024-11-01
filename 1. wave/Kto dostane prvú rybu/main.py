@@ -13,40 +13,23 @@ def sort_penguins(first_penguins_temp):
             first_penguins_temp[key].sort()
 
 
-def move_penguins(positions, velocities, queries_dict, first_penguins_temp):
+
+
+
+
+def move_penguins(init_run, positions, velocities, queries_dict, first_penguins_temp):
     
     visited_queries_iter = set()  # variable that remembers queries visited for each iteration {query_value} 
 
 
-    # This loop checks if there are penguins located at all the LOL's possible positions
-    for i in range(len(positions)):   # O(n)
-        if positions[i] in queries_dict:        
-            penguin_index = i
-            visited_query_index = queries_dict[positions[i]]
 
-            
-            if visited_query_index not in first_penguins_temp:
-                first_penguins_temp[visited_query_index] = []  # Initialize with an empty list
 
-            # Make a log that a query has been visited by a peguin on index "penguin_index" == "x"
-            first_penguins_temp[visited_query_index].append(penguin_index)
-
-            # Make a log that query has been visited so that it can be popped at the end of iteration
-            visited_queries_iter.add(positions[i])
 
 
     pop_visited_queries(visited_queries_iter, queries_dict)
 
 
 
-# def move_penguins(positions, velocities, queries_dict, first_penguins_temp):
-    
-#     visited_queries_iter = set()  # variable that remembers queries visited for each iteration {query_value} 
-
-    
-
-
-#     pop_visited_queries(visited_queries_iter, queries_dict)
 
 
 
@@ -58,13 +41,17 @@ def solve(positions: List[int], velocities: List[int], queries: List[int]) -> Li
     first_penguins_temp = {}  # {query-index: [position-indexes]}
     
     queries_dict = {value: index for index, value in enumerate(queries)} # {query:index} O(q)
+    
+    init_run = True
 
     while queries_dict != dict():
-        move_penguins(positions, velocities, queries_dict, first_penguins_temp)
+        move_penguins(init_run, positions, velocities, queries_dict, first_penguins_temp)
+        init_run = False
 
+
+    # sort penguins' indexes
     sort_penguins(first_penguins_temp)
   
-
     # transfer "first_penguins_temp" to "first_penguins"
     for i in range(len(queries)):      # O(q)
         penguins_indexes = first_penguins_temp[i]
@@ -76,8 +63,34 @@ def solve(positions: List[int], velocities: List[int], queries: List[int]) -> Li
 
 
 
-# THIS MOVE FUNCTION CAN ONLY CHECK IF PENGUINS STAND ON QUERY AT THE MOMENT.
 
+
+
+
+# THIS MOVE FUNCTION CAN ONLY CHECK IF PENGUINS STAND ON QUERY AT THE MOMENT.
+# def move_penguins(positions, velocities, queries_dict, first_penguins_temp):
+    
+#     visited_queries_iter = set()  # variable that remembers queries visited for each iteration {query_value} 
+
+
+#     # This loop checks if there are penguins located at all the LOL's possible positions
+#     for i in range(len(positions)):   # O(n)
+#         if positions[i] in queries_dict:        
+#             penguin_index = i
+#             visited_query_index = queries_dict[positions[i]]
+
+            
+#             if visited_query_index not in first_penguins_temp:
+#                 first_penguins_temp[visited_query_index] = []  # Initialize with an empty list
+
+#             # Make a log that a query has been visited by a peguin on index "penguin_index" == "x"
+#             first_penguins_temp[visited_query_index].append(penguin_index)
+
+#             # Make a log that query has been visited so that it can be popped at the end of iteration
+#             visited_queries_iter.add(positions[i])
+
+
+#     pop_visited_queries(visited_queries_iter, queries_dict)
 
 
 
