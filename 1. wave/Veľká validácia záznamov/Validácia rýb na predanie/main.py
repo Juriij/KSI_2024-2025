@@ -57,7 +57,7 @@ class Record:
 
 
 
-def record_iterate(record):
+def print_nodes(record):
     node = record._first
     
     iter = 0
@@ -69,68 +69,43 @@ def record_iterate(record):
         
 
 
-def check_duplicate(all_objects, node):
+def is_duplicate(all_objects, node) -> bool:
     original_length = len(all_objects)
     all_objects.add(node)
-    if original_length == len(all_objects):
+    if original_length == len(all_objects): 
         return True
 
 
 
 
-# loop that iterates over the doubly-linked list and checks it's validity
+# loop that iterates over the doubly-linked list and checks it's validSity
 def record_invalid(record) -> bool:
     all_objects = set()
     node = record._first
+    prev_node = node.prev
 
-    # first node               ???
-    if not type(node.next) == Node:
-        return True
-    
-    #iter = 0        ####################
-    while node != None:
-
-        #iter += 1                ################
-
-        # print("iteration: ", iter)    #############
-        # print("node.prev: ", node.prev)
-        # print("node: ", node)
-        # print("node.next: ", node.next)
-
-
-        if node is record._first:
-            all_objects.add(node)
-
-        else:
-            if node is not record._last:  # arbitrary node
-                if not type(node) == Node:
-                    return True
-                
-                if check_duplicate(all_objects, node.prev):
-                    return True
-                if check_duplicate(all_objects, node.next):
-                    return True
-                  
-
-            else:  # last node
-                if check_duplicate(all_objects, node):
-                    return True
-                if check_duplicate(all_objects, node.prev):
-                    return True
-                if not type(node.prev) == Node:
-                    return True
+    while True:   
+        if node == None:
+            if prev_node is record._last:
+                return False
+            else:
+                return True
+            
+        if node.prev is not prev_node:
+            return True
+        
+        if is_duplicate(all_objects, node):
+            return True
 
 
+        prev_node = node
         node = node.next
-    
-    return False
 
 
 
 
 # Tuto funkci implementuj.
 def is_valid(record: Record) -> bool:
-    #print(0)
     # edge case zero elements
     if record._first == None or record._last == None:
         if record._first == None and record._last == None:
@@ -138,7 +113,6 @@ def is_valid(record: Record) -> bool:
         else:
             return False
 
-    #print(1)
     # edge case one element
     if record._last is record._first:
         if record._last.next == None and record._last.prev == None:
@@ -148,67 +122,11 @@ def is_valid(record: Record) -> bool:
         else:
             return False
  
-    #print(2)
     # regular cases:
     if not ( (record._first.prev == None) and (record._last.next == None) ):
         return False
 
-    #print(3)
     if record_invalid(record):
         return False
 
-    #print(4)
     return True
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Testy:
-# Hláška "Tvůj kód se nepodařilo spustit, oprav si chyby!" môže ľahko znamenať, že padli tieto testy
-# ak chcete skúsiť, či to je nimi, len vymažte testy.
-test_record = Record()
-for i in range(4):
-    test_record.append(Fish("Goldie" + str(i), "Ostriez", 10))
-test_record.pop()
-test_record.popleft()
-
-# pouzili sme len "verejne" metody, tak je to urcite validne
-assert is_valid(test_record)
-
-# siahli sme na _last a zmenili ho nespravne, uz nie valid
-test_record._last.next = test_record._last
-assert not is_valid(test_record)
-test_record._last.next = None
-
-#jednosmerne sme zmenili poradie, nie valid
-record_iterate(test_record)
-test_record._last.prev.prev.prev.next = test_record._last.prev
-assert not is_valid(test_record)
-test_record._last.prev.prev.prev.next = test_record._last.prev.prev
-
-
-
-test_record = Record()
-test_record._first = Fish("zuzu", "salmon", 5)
-assert not is_valid(test_record)
-
-
-test_record = Record()
-test_record.append(Fish("zuzu", "salmon", 5))
-test_record._last.next = Fish("zuzu", "salmon", 5)
-assert not is_valid(test_record)
