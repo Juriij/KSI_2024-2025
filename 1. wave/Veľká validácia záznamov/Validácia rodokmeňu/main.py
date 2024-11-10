@@ -56,74 +56,46 @@ def check_names(fish_names, fish_name):
 def is_valid(family_tree: FamilyTree, root=None, fish_names=set(), sub_tree_value_count=0) -> bool:
     if root == None:
         root = family_tree._root
-
+        fish_names = set()
+        
     sub_tree_value_count += root.fish.value
 
     children = root.children
 
     # check for duplicates (names)
     if check_names(fish_names, root.fish.name) == False:
-        return False
+        return False, 0, 0
 
-    if children == []:
-        return
+    if children == [] and root is not family_tree._root:
+        return None, sub_tree_value_count, fish_names
     
     else:
         for child in children:
             if child.fish.species != root.fish.species:
-                return False
-            
-            if is_valid(family_tree, child, fish_names, sub_tree_value_count) == False:
-                return False
-        
-            
-    # check sub_tree_value validity for the family_tree._root at the end of the recursion
+                if root is family_tree._root:
+                    return False
 
+                else:
+                    return False, 0, 0
+
+            
+            validity, sub_tree_value_count, fish_names = is_valid(family_tree, child, fish_names, sub_tree_value_count)
+
+            if validity == False:
+                if root is family_tree._root:
+                    return False
+
+                else:
+                    return False, 0, 0
+
+        
+    if root is family_tree._root:  # recursion is over
+        # checking sub_tree_value validity for the family_tree._root and '_names' validity  
+        if root.sub_tree_value == sub_tree_value_count and len(family_tree._names) == len(fish_names):          
+            return True
+
+        else:
+            return False
     
-
-
-        
-
-
-
-    return True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Testy:
-# Hláška "Tvůj kód se nepodařilo spustit, oprav si chyby!" môže ľahko znamenať, že padli tieto testy
-# ak chcete skúsiť, či to je nimi, len vymažte testy.
-tree = FamilyTree(Fish("Goldie0", "Ostriez", 10))
-for i in range(1, 10):
-    tree.add(Fish("Goldie" + str(i), "Ostriez", i), "Goldie" + str(i - 1))
-    tree.add(Fish("NotGoldie" + str(i), "NieOstriez", i), "Goldie" + str(i - 1))
-
-# pouzili sme len add, teda validny strom
-assert is_valid(tree)
-
-# pridame meno do _names, pricom sa tam ryba s menom "Oliver" nenachadza
-tree._names.add("Oliver")
-assert not is_valid(tree)
-tree._names.remove("Oliver")
-
-# zvysime hodnotu jednej ryby o 42, preto sub_tree_value nebude spravne nastavene
-tree._root.children[0].fish.value += 42
-assert not is_valid(tree)
-tree._root.children[0].fish.value -= 42
-
-# v strome su dve ryby s rovnakym menom
-tree._root.children[0].children.append(Node(tree._root.fish))
-assert not is_valid(tree)
-tree._root.children[0].children.pop()
+    else:
+        return None, sub_tree_value_count, fish_names
