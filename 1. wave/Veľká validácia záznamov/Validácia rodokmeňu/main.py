@@ -40,9 +40,67 @@ class FamilyTree:
         
 
 
+
+
+def check_names(fish_names, fish_name):
+    original_len = len(fish_names)
+    fish_names.add(fish_name)
+    if original_len == len(fish_names):
+        return False
+    
+    return True
+
+
+
 # Tuto funkci implementuj.
-def is_valid(family_tree: FamilyTree) -> bool:
-    pass
+def is_valid(family_tree: FamilyTree, root=None, fish_names=set(), sub_tree_value_count=0) -> bool:
+    if root == None:
+        root = family_tree._root
+
+    sub_tree_value_count += root.fish.value
+
+    children = root.children
+
+    # check for duplicates (names)
+    if check_names(fish_names, root.fish.name) == False:
+        return False
+
+    if children == []:
+        return
+    
+    else:
+        for child in children:
+            if child.fish.species != root.fish.species:
+                return False
+            
+            if is_valid(family_tree, child, fish_names, sub_tree_value_count) == False:
+                return False
+        
+            
+    # check sub_tree_value validity for the family_tree._root at the end of the recursion
+
+    
+
+
+        
+
+
+
+    return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Testy:
 # Hláška "Tvůj kód se nepodařilo spustit, oprav si chyby!" môže ľahko znamenať, že padli tieto testy
@@ -55,9 +113,9 @@ for i in range(1, 10):
 # pouzili sme len add, teda validny strom
 assert is_valid(tree)
 
-# pridame meno do
-assert not is_valid(tree) _names, pricom sa tam ryba s menom "Oliver" nenachadza
+# pridame meno do _names, pricom sa tam ryba s menom "Oliver" nenachadza
 tree._names.add("Oliver")
+assert not is_valid(tree)
 tree._names.remove("Oliver")
 
 # zvysime hodnotu jednej ryby o 42, preto sub_tree_value nebude spravne nastavene
