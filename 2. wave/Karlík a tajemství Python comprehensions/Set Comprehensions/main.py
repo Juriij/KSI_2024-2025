@@ -8,8 +8,6 @@
 def unique_vowels(s: str)-> set[str]:
     return {letter.lower() for letter in s  if letter.lower() in {"a", "i", "u", "e", "o", "y"}}
 
-print(unique_vowels("Karlik je COOL") )
-
 
 assert unique_vowels("Karlik je COOL") == {'a', 'e', 'i', 'o'}, "Test case 1 failed"
 
