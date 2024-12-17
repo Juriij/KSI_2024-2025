@@ -79,7 +79,4 @@ def run_all_tests():
     run_test(test_generator_of_generators, lambda x: array_equals(x, [[1, 2, 3, 4], [2, 4], [3, 6, 9, 12, 15, 18]], lambda a, b: array_equals(a, b)), "Generator²")
     run_test(test_primes_generator, lambda x: array_equals(x, [2, 3, 5, 7, 11, 13]), "Prime numbers")
 
-#run_all_tests()
-
-
-run_test(test_fibonacci_generator, lambda x: array_equals(x, [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]), "Fibonacci")
+run_all_tests()
