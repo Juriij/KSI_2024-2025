@@ -126,59 +126,39 @@ def generator_of_generators() -> Generator[Generator[int, None, None], None, Non
 
 
 def primes_generator() -> Generator[int, None, None]:
-    primes = []
-    n = 2
-    while True:
-        if primes == []:
-            primes.append(n)
-            yield n
-        
-        else:
-            is_prime = True
-
-            for prime in primes:
-                if n % prime != 0:
-                    continue
-
-                else:
-                    is_prime = False
-                    break
-
-
-            if is_prime:
-                primes.append(n)
-                yield n
-
-        n += 1
-
-
-
-
-
-
-
-#################### PRIMES GENERATOR TESTING ################################
-import time
-
-
-genr_primes = primes_generator()
-collect_primes = []
-
-start = time.time()
-
-while True:
-    prime = next(genr_primes)
-    print(len(collect_primes))
-
-    collect_primes.append(prime)
-
-    if len(collect_primes) == 10**6:
-        break
-
-end = time.time()
-
-print(end-start)
-
-
-###############################################################################
+    limit = 10_000  
+    base_primes = []
+    sieve = [True] * (limit + 1)
+    sieve[0] = sieve[1] = False  
     
+    for i in range(2, limit + 1):
+        if sieve[i]:
+            base_primes.append(i)
+            for multiple in range(i * i, limit + 1, i):
+                sieve[multiple] = False
+    
+
+    for prime in base_primes:
+        yield prime
+
+
+    segment_start = limit + 1
+    segment_size = 100_000 
+
+    while True:
+        segment_end = segment_start + segment_size - 1
+        segment = [True] * (segment_size)
+
+
+        for prime in base_primes:
+            start = max(prime * prime, (segment_start + prime - 1) // prime * prime)
+            for multiple in range(start, segment_end + 1, prime):
+                segment[multiple - segment_start] = False
+
+
+        for i in range(segment_size):
+            if segment[i]:
+                yield segment_start + i
+
+
+        segment_start += segment_size
