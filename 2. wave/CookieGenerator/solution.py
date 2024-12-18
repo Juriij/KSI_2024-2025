@@ -126,4 +126,59 @@ def generator_of_generators() -> Generator[Generator[int, None, None], None, Non
 
 
 def primes_generator() -> Generator[int, None, None]:
-    pass
+    primes = []
+    n = 2
+    while True:
+        if primes == []:
+            primes.append(n)
+            yield n
+        
+        else:
+            is_prime = True
+
+            for prime in primes:
+                if n % prime != 0:
+                    continue
+
+                else:
+                    is_prime = False
+                    break
+
+
+            if is_prime:
+                primes.append(n)
+                yield n
+
+        n += 1
+
+
+
+
+
+
+
+#################### PRIMES GENERATOR TESTING ################################
+import time
+
+
+genr_primes = primes_generator()
+collect_primes = []
+
+start = time.time()
+
+while True:
+    prime = next(genr_primes)
+    print(len(collect_primes))
+
+    collect_primes.append(prime)
+
+    if len(collect_primes) == 10**6:
+        break
+
+end = time.time()
+
+print(end-start)
+
+
+###############################################################################
+    
