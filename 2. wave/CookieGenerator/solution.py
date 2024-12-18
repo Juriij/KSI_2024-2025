@@ -94,17 +94,35 @@ def password_generator(length: int) -> Generator[str, None, None]:
 
             yield result
 
+
+
+
+
+
+
+
+
+def multiples(base_num):
+    multiplicant = 1
     
+    while True:
+        yield base_num * multiplicant
+        multiplicant += 1
+
     
-
-
-
-
-
-
 
 def generator_of_generators() -> Generator[Generator[int, None, None], None, None]:
-    pass
+    n = 1
+    while True:
+        yield multiples(n)
+        n += 1
+    
+
+
+
+
+
+
 
 
 def primes_generator() -> Generator[int, None, None]:
