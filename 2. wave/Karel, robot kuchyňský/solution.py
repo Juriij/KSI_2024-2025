@@ -1,4 +1,5 @@
 from typing import Callable
+from collections import Counter
 
 Bowl = list[str]
 Action = Callable[[Bowl], Bowl] | \
@@ -52,7 +53,15 @@ def mix(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
 
 
 def cut(bowl_a: Bowl) -> Bowl:
-    pass
+    new_bowl = []
+    for ingredience in bowl_a:
+        if ingredience == "":
+            new_bowl.append("")
+        else:
+            for i in range(0, len(ingredience), 2):
+                new_bowl.append(ingredience[i:i+2])
+
+    return new_bowl
 
 
 
@@ -61,8 +70,90 @@ def cut(bowl_a: Bowl) -> Bowl:
 
 
 
+def remove(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
+    bowl_a_counts = Counter(bowl_a)
+
+    new_list = []
+
+    for ingredient in bowl_b:
+        if bowl_a_counts[ingredient] > 0:
+            bowl_a_counts[ingredient] -= 1
+
+        else:
+            new_list.append(ingredient)
+
+    return new_list
 
 
+
+
+
+
+def sieve(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
+    result = []
+    bowl_a_longer = False
+    bowl_b_longer = False
+
+    if len(bowl_a) <= len(bowl_b):
+        iterate = len(bowl_a)
+        bowl_b_longer = True
+        
+
+    else:
+        iterate = len(bowl_b)
+        bowl_a_longer = True
+
+    for i in range(iterate):
+        if len(bowl_a[i]) == len(bowl_b[i]):
+            result.append(bowl_a[i])
+            result.append(bowl_b[i])
+
+        elif len(bowl_a[i]) > len(bowl_b[i]):
+            result.append(bowl_b[i])
+
+        else:
+            result.append(bowl_a[i])
+
+
+    if bowl_a_longer:
+        result = result + bowl_a[iterate:]
+
+
+    elif bowl_b_longer:
+        result = result + bowl_b[iterate:]
+
+    return result
+
+
+
+
+
+
+def compress(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
+    new_list = []
+
+    bowl_b = "".join(bowl_b)
+    b_index = 0
+    len_bowl_b = len(bowl_b)
+
+    if len_bowl_b == 0:
+        return bowl_a
+
+    for ingredient in bowl_a:
+        new_ingredient = ""
+
+        for char in ingredient:
+            new_char = char + bowl_b[b_index]
+            new_ingredient += new_char    
+
+            b_index += 1
+            if len_bowl_b / b_index == 1:
+                b_index = 0     
+
+
+        new_list.append(new_ingredient)
+
+    return new_list
 
 
 
@@ -74,18 +165,6 @@ def cut(bowl_a: Bowl) -> Bowl:
 def bake(bowl_a: Bowl, bowl_b: Bowl, bowl_c: Bowl) -> Bowl:
     pass
 
-
-
-def remove(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
-    pass
-
-
-def compress(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
-    pass
-
-
-def sieve(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
-    pass
 
 
 def cook(recipe: list[Bowl, Action]) -> Bowl:
