@@ -1,5 +1,6 @@
 from typing import Callable
 from collections import Counter
+import inspect
 
 Bowl = list[str]
 Action = Callable[[Bowl], Bowl] | \
@@ -161,11 +162,105 @@ def compress(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
 
 
 
-
 def bake(bowl_a: Bowl, bowl_b: Bowl, bowl_c: Bowl) -> Bowl:
-    pass
+    longest_bowl = []
+    new_bowl_a = []
+
+    if len(bowl_a) == 0:
+        return bowl_b + bowl_c
+
+    
+    if len(bowl_b) >= len(bowl_c):
+        longest_bowl = bowl_b
+
+    else:
+        longest_bowl = bowl_c
+
+
+
+    if len(longest_bowl) <= len(bowl_a):
+        new_bowl_a = bowl_a[:len(longest_bowl)]
+
+    else:
+        remainder = len(longest_bowl) % len(bowl_a)
+
+        for _ in range(len(longest_bowl) // len(bowl_a)):
+            new_bowl_a.extend(bowl_a) 
+
+        new_bowl_a.extend(bowl_a[:remainder])
+
+    return new_bowl_a + bowl_b + bowl_c
+
+
+
+
+
+
+
+
+
 
 
 
 def cook(recipe: list[Bowl, Action]) -> Bowl:
-    pass
+    processing = True
+    i = 0
+    previous_recipe = recipe
+
+    while processing:
+        #print("this is i:", i)
+        # success
+        if len(recipe) == 1 and isinstance(recipe[0], list):
+            return recipe[0]
+
+
+        if i == len(recipe):
+            # not success
+            if recipe == previous_recipe:
+                return []
+            
+            previous_recipe = recipe
+            i = 0
+
+
+
+        # main
+        if callable(recipe[i]):
+
+            #print("hererererere")
+
+            func = recipe[i]
+            sig = inspect.signature(func)
+            params = sig.parameters
+
+            #print(len(params))
+
+            slice = recipe[i+1 : i+1+len(params)]
+            
+            #print(slice)
+
+            enum = 0
+            suitable = True
+            for enum, arg in enumerate(slice):
+                #print("piece of slice", arg)
+                if isinstance(arg, list):
+                    continue
+
+                suitable = False
+                break
+
+            #print("enum:", enum)
+            
+            if suitable and len(params) == len(slice):
+                #print(f"suitable is: {suitable}")
+                new_bowl = func(*slice)
+                #print(f'new_bowl: {new_bowl}')
+                recipe = recipe[:i] + [new_bowl] + recipe[i+1+len(params):]
+                
+            
+            else:
+                i += enum
+
+        i += 1
+
+        #print(recipe)
