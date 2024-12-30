@@ -12,13 +12,8 @@ def add(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
     return bowl_a + bowl_b
 
 
-
-
 def boil(bowl_a: Bowl) -> Bowl:
-    return [ "°" + ingredience + "°"  for ingredience in bowl_a]
-
-
-
+    return ["°"+ingredience+"°" for ingredience in bowl_a]
 
 
 def mix(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
@@ -29,7 +24,6 @@ def mix(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
     if len(bowl_a) <= len(bowl_b):
         iterate = len(bowl_a)
         bowl_b_longer = True
-        
 
     else:
         iterate = len(bowl_b)
@@ -39,18 +33,13 @@ def mix(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
         result.append(bowl_a[i])
         result.append(bowl_b[i])
 
-
     if bowl_a_longer:
         result = result + bowl_a[iterate:]
-
 
     elif bowl_b_longer:
         result = result + bowl_b[iterate:]
 
     return result
-
-
-
 
 
 def cut(bowl_a: Bowl) -> Bowl:
@@ -63,12 +52,6 @@ def cut(bowl_a: Bowl) -> Bowl:
                 new_bowl.append(ingredience[i:i+2])
 
     return new_bowl
-
-
-
-
-
-
 
 
 def remove(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
@@ -86,10 +69,6 @@ def remove(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
     return new_list
 
 
-
-
-
-
 def sieve(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
     result = []
     bowl_a_longer = False
@@ -98,7 +77,6 @@ def sieve(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
     if len(bowl_a) <= len(bowl_b):
         iterate = len(bowl_a)
         bowl_b_longer = True
-        
 
     else:
         iterate = len(bowl_b)
@@ -115,19 +93,13 @@ def sieve(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
         else:
             result.append(bowl_a[i])
 
-
     if bowl_a_longer:
         result = result + bowl_a[iterate:]
-
 
     elif bowl_b_longer:
         result = result + bowl_b[iterate:]
 
     return result
-
-
-
-
 
 
 def compress(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
@@ -145,21 +117,15 @@ def compress(bowl_a: Bowl, bowl_b: Bowl) -> Bowl:
 
         for char in ingredient:
             new_char = char + bowl_b[b_index]
-            new_ingredient += new_char    
+            new_ingredient += new_char
 
             b_index += 1
             if len_bowl_b / b_index == 1:
-                b_index = 0     
-
+                b_index = 0
 
         new_list.append(new_ingredient)
 
     return new_list
-
-
-
-
-
 
 
 def bake(bowl_a: Bowl, bowl_b: Bowl, bowl_c: Bowl) -> Bowl:
@@ -169,14 +135,11 @@ def bake(bowl_a: Bowl, bowl_b: Bowl, bowl_c: Bowl) -> Bowl:
     if len(bowl_a) == 0:
         return bowl_b + bowl_c
 
-    
     if len(bowl_b) >= len(bowl_c):
         longest_bowl = bowl_b
 
     else:
         longest_bowl = bowl_c
-
-
 
     if len(longest_bowl) <= len(bowl_a):
         new_bowl_a = bowl_a[:len(longest_bowl)]
@@ -185,21 +148,11 @@ def bake(bowl_a: Bowl, bowl_b: Bowl, bowl_c: Bowl) -> Bowl:
         remainder = len(longest_bowl) % len(bowl_a)
 
         for _ in range(len(longest_bowl) // len(bowl_a)):
-            new_bowl_a.extend(bowl_a) 
+            new_bowl_a.extend(bowl_a)
 
         new_bowl_a.extend(bowl_a[:remainder])
 
     return new_bowl_a + bowl_b + bowl_c
-
-
-
-
-
-
-
-
-
-
 
 
 def cook(recipe: list[Bowl, Action]) -> Bowl:
@@ -208,59 +161,40 @@ def cook(recipe: list[Bowl, Action]) -> Bowl:
     previous_recipe = recipe
 
     while processing:
-        #print("this is i:", i)
         # success
         if len(recipe) == 1 and isinstance(recipe[0], list):
             return recipe[0]
-
 
         if i == len(recipe):
             # not success
             if recipe == previous_recipe:
                 return []
-            
+
             previous_recipe = recipe
             i = 0
 
-
-
         # main
         if callable(recipe[i]):
-
-            #print("hererererere")
-
             func = recipe[i]
             sig = inspect.signature(func)
             params = sig.parameters
 
-            #print(len(params))
-
-            slice = recipe[i+1 : i+1+len(params)]
-            
-            #print(slice)
+            segment = recipe[i+1:i+1+len(params)]
 
             enum = 0
             suitable = True
-            for enum, arg in enumerate(slice):
-                #print("piece of slice", arg)
+            for enum, arg in enumerate(segment):
                 if isinstance(arg, list):
                     continue
 
                 suitable = False
                 break
 
-            #print("enum:", enum)
-            
-            if suitable and len(params) == len(slice):
-                #print(f"suitable is: {suitable}")
-                new_bowl = func(*slice)
-                #print(f'new_bowl: {new_bowl}')
+            if suitable and len(params) == len(segment):
+                new_bowl = func(*segment)
                 recipe = recipe[:i] + [new_bowl] + recipe[i+1+len(params):]
-                
-            
+
             else:
                 i += enum
 
         i += 1
-
-        #print(recipe)
