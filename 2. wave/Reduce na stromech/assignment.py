@@ -129,12 +129,19 @@ def node_map_base() -> Tree | None:
 
 def evaluate_function(value: str, left: int, right: int) -> int:
     # TODO
-    return
+    if value == "-":
+        return left - right
+    
+    elif value == "+":
+        return left + right
+    
+    elif value == "*":
+        return left * right
 
 
 def evaluate_base(value: int) -> int:
     # TODO
-    return
+    return value
 
 
 LinkedFunction = Callable[[int, T], T]
@@ -163,9 +170,38 @@ def node_map(function: IntFunction, tree: Tree | None) -> Tree | None:
     return tree_reduce(node_map_function, node_map_base(), tree)
 
 
+def helper_bst(root, left, right):
+    if root == False:
+        return False
+    
+    left_leaf = False
+    right_leaf = False
+
+    if left == None:
+        left_leaf = True
+
+    if right == None:
+        right_leaf = True
+
+    if (left_leaf or root >= left) and (right_leaf or root <= right):
+        return root
+    
+    else:
+        return False
+
+
+
+def helper_bst_base():
+    return None
+
+
 def is_bst(tree: Tree | None) -> bool:
     # TODO
-    return
+    if tree_reduce(helper_bst, helper_bst_base(), tree) == False:
+        return False
+    
+    return True
+
 
 
 def evaluate(tree: ArithmTree) -> int:
@@ -238,24 +274,24 @@ if __name__ == "__main__":
     assert node_map(lambda x: x, tree1) == tree1
     assert node_map(lambda x: x % 2, sub_tree2) == Tree(0, leaf0, leaf1)
 
-    # # Binary search tree
-    # assert not is_bst(tree1)
-    # assert not is_bst(tree2)
-    # assert is_bst(tree3)
-    # assert not is_bst(sub_tree1)
-    # assert not is_bst(sub_tree2)
-    # assert not is_bst(sub_tree3)
-    # assert not is_bst(sub_tree4)
-    # assert is_bst(sub_tree5)
-    # assert is_bst(sub_tree6)
+    # Binary search tree
+    assert not is_bst(tree1)
+    assert not is_bst(tree2)
+    assert is_bst(tree3)
+    assert not is_bst(sub_tree1)
+    assert not is_bst(sub_tree2)
+    assert not is_bst(sub_tree3)
+    assert not is_bst(sub_tree4)
+    assert is_bst(sub_tree5)
+    assert is_bst(sub_tree6)
 
-    # # Arithmetic tree
-    # assert evaluate(tree4) == 18
-    # assert evaluate(atree1) == 2
-    # assert evaluate(atree2) == 9
-    # assert evaluate(aleaf0) == 0
-    # assert evaluate(aleaf5) == 5
-    # assert evaluate(ArithmNode("+", tree4, tree4)) == 36
+    # Arithmetic tree
+    assert evaluate(tree4) == 18
+    assert evaluate(atree1) == 2
+    assert evaluate(atree2) == 9
+    assert evaluate(aleaf0) == 0
+    assert evaluate(aleaf5) == 5
+    assert evaluate(ArithmNode("+", tree4, tree4)) == 36
 
     # # Linked list
     # assert linked_reduce(lambda x, y: x - y, 0, linked_list3) == 3
