@@ -119,12 +119,12 @@ def node_map_apply(function: IntFunction,
                    left: Tree,
                    right: Tree) -> Tree | None:
     # TODO
-    return
+    return Tree(function(value), left, right)
 
 
 def node_map_base() -> Tree | None:
     # TODO
-    return
+    return None
 
 
 def evaluate_function(value: str, left: int, right: int) -> int:
@@ -233,10 +233,10 @@ if __name__ == "__main__":
     assert in_order(sub_tree2) == [2, 0, 7]
     assert in_order(tree1) == [3, 4, 1, 5, 2, 0, 7]
 
-    # # Node map
-    # assert node_map(lambda x: x * 2, tree1) == tree2
-    # assert node_map(lambda x: x, tree1) == tree1
-    # assert node_map(lambda x: x % 2, sub_tree2) == Tree(0, leaf0, leaf1)
+    # Node map
+    assert node_map(lambda x: x * 2, tree1) == tree2
+    assert node_map(lambda x: x, tree1) == tree1
+    assert node_map(lambda x: x % 2, sub_tree2) == Tree(0, leaf0, leaf1)
 
     # # Binary search tree
     # assert not is_bst(tree1)
