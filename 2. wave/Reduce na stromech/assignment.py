@@ -152,14 +152,21 @@ def linked_reduce(linked_func: LinkedFunction[T],
                   leaf_val: T,
                   node: LinkedListNode | None) -> T:
     # TODO
-    return
+    if node == None:
+        return leaf_val
+
+    return linked_func(node.value,
+                       linked_reduce(linked_func, leaf_val, node.next))
 
 
 def list_tree_reduce(list_func: ListFunction[T],
                      node: ListTree) -> T:
     # TODO
-    return
+    if node.children == []:
+        return list_func(node.value, node.children)
 
+    return list_func(node.value, [list_tree_reduce(list_func, child) for child in node.children])
+    
 
 def in_order(tree: Tree | None) -> list[int]:
     return tree_reduce(in_order_function, in_order_base(), tree)
@@ -293,18 +300,18 @@ if __name__ == "__main__":
     assert evaluate(aleaf5) == 5
     assert evaluate(ArithmNode("+", tree4, tree4)) == 36
 
-    # # Linked list
-    # assert linked_reduce(lambda x, y: x - y, 0, linked_list3) == 3
-    # assert linked_reduce(lambda x, y: x + y, 0, linked_list3) == 7
-    # assert linked_reduce(lambda x, y: x * y, 1, linked_list3) == 8
-    # assert linked_reduce(lambda x, y: x * y, 0, linked_list3) == 0
+    # Linked list
+    assert linked_reduce(lambda x, y: x - y, 0, linked_list3) == 3
+    assert linked_reduce(lambda x, y: x + y, 0, linked_list3) == 7
+    assert linked_reduce(lambda x, y: x * y, 1, linked_list3) == 8
+    assert linked_reduce(lambda x, y: x * y, 0, linked_list3) == 0
 
-    # assert list_tree_reduce(lambda value, children: value + sum(children),
-    #                         tree5) == 28
-    # assert list_tree_reduce(lambda x, _: x, tree5) == 7
-    # assert list_tree_reduce(
-    #     lambda value, children: str(value) + ": [" + ", ".join(children) + "]",
-    #     tree5
-    #     ) == "7: [5: [1: [], 2: [], 3: []], 6: [4: []]]"
+    assert list_tree_reduce(lambda value, children: value + sum(children),
+                            tree5) == 28
+    assert list_tree_reduce(lambda x, _: x, tree5) == 7
+    assert list_tree_reduce(
+        lambda value, children: str(value) + ": [" + ", ".join(children) + "]",
+        tree5
+        ) == "7: [5: [1: [], 2: [], 3: []], 6: [4: []]]"
 
     print("All tests passed!")
