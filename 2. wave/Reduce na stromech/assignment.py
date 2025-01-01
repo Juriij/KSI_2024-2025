@@ -177,10 +177,28 @@ def node_map(function: IntFunction, tree: Tree | None) -> Tree | None:
     return tree_reduce(node_map_function, node_map_base(), tree)
 
 
-def helper_bst(root, left, right):
-    if root == False:
-        return False
+def check_fail(root, left, right):
+    root_zero = False
+    left_zero = False
+    right_zero = False
+
+    if (isinstance(root, int) and not isinstance(root, bool)) and root == 0:
+        root_zero = True
+    if (isinstance(left, int) and not isinstance(left, bool)) and left == 0:
+        left_zero = True
+    if (isinstance(right, int) and not isinstance(right, bool)) and right == 0:
+        right_zero = True
+
+    if (not(root_zero) and root == False) or (not(left_zero) and left == False) or (not(right_zero) and right == False):
+        return True
     
+    return False
+
+
+def helper_bst(root, left, right):
+    if check_fail(root, left, right):
+        return False
+
     left_leaf = False
     right_leaf = False
 
@@ -197,7 +215,6 @@ def helper_bst(root, left, right):
         return False
 
 
-
 def helper_bst_base():
     return None
 
@@ -208,7 +225,6 @@ def is_bst(tree: Tree | None) -> bool:
         return False
     
     return True
-
 
 
 def evaluate(tree: ArithmTree) -> int:
