@@ -131,11 +131,11 @@ def evaluate_function(value: str, left: int, right: int) -> int:
     # TODO
     if value == "-":
         return left - right
-    
-    elif value == "+":
+
+    if value == "+":
         return left + right
-    
-    elif value == "*":
+
+    if value == "*":
         return left * right
 
 
@@ -152,7 +152,7 @@ def linked_reduce(linked_func: LinkedFunction[T],
                   leaf_val: T,
                   node: LinkedListNode | None) -> T:
     # TODO
-    if node == None:
+    if node is None:
         return leaf_val
 
     return linked_func(node.value,
@@ -165,8 +165,10 @@ def list_tree_reduce(list_func: ListFunction[T],
     if node.children == []:
         return list_func(node.value, node.children)
 
-    return list_func(node.value, [list_tree_reduce(list_func, child) for child in node.children])
-    
+    return list_func(node.value,
+                     [list_tree_reduce(list_func, child)
+                      for child in node.children])
+
 
 def in_order(tree: Tree | None) -> list[int]:
     return tree_reduce(in_order_function, in_order_base(), tree)
@@ -191,7 +193,7 @@ def check_fail(root, left, right):
 
     if (not(root_zero) and root == False) or (not(left_zero) and left == False) or (not(right_zero) and right == False):
         return True
-    
+
     return False
 
 
@@ -202,17 +204,16 @@ def helper_bst(root, left, right):
     left_leaf = False
     right_leaf = False
 
-    if left == None:
+    if left is None:
         left_leaf = True
 
-    if right == None:
+    if right is None:
         right_leaf = True
 
     if (left_leaf or root >= left) and (right_leaf or root <= right):
         return root
-    
-    else:
-        return False
+
+    return False
 
 
 def helper_bst_base():
@@ -223,7 +224,7 @@ def is_bst(tree: Tree | None) -> bool:
     # TODO
     if tree_reduce(helper_bst, helper_bst_base(), tree) == False:
         return False
-    
+
     return True
 
 
