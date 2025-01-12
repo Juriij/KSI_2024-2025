@@ -55,26 +55,12 @@ class Grid2D:
         if other.width > self.width or other.height > self.height:
             return False
         
-        return all([ all([  #need to compare the slices here   for j in range(self.width-other.width+1)]) for i in range(self.height-other.height+1) ])
-
-
-
-
-
-        
-
-
-
-  
-            
-        
-
-
-
-
-
-
-
+        for i in range(self.height - other.height + 1):
+            for j in range(self.width - other.width + 1):
+                sub_grid = [self.grid[o + i][j:j + other.width] for o in range(other.height)]
+                if sub_grid == other.grid:
+                    return True
+        return False
 
 
 # Základní testy:
@@ -98,4 +84,5 @@ assert grid1 ** grid1 == \
 
 assert grid1 != grid2
 assert grid1 == Grid2D([[1], [2], [3], [4], [5]])
+
 assert Grid2D([[1, 2], [2, 3]]) in grid1
