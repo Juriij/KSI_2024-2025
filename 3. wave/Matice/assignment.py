@@ -16,11 +16,17 @@ class Matrix:
     @staticmethod
     def zero_matrix(height: int, width: int) -> 'Matrix':
         """ Staticka metoda na vytvoreni nulove matice """
+        if height < 1 or width < 1:
+            raise Exception("Matrix Error: {cannot initialize matrix of the given height and width}")
+
         return Matrix([[0 for _ in range(width)] for _ in range(height)])
 
     @staticmethod
     def identity_matrix(side: int) -> 'Matrix':
         """ Staticka metoda na vytvoreni jednotkove matice """
+        if side < 1:
+            raise Exception("Matrix Error: {cannot initialize matrix of the given length}")
+
         return Matrix([[1 if i == j else 0 for j in range(side)] for i in range(side)])
 
     def __str__(self) -> str:
@@ -40,6 +46,9 @@ class Matrix:
         
         if row > self.rows or column > self.columns:
             raise Exception("Matrix Error: {index out of range}")
+        
+        if row < 0 or column < 0:
+            raise Exception("Matrix Error: {index out of range}")
 
         return self.matrix[row][column]
 
@@ -48,6 +57,9 @@ class Matrix:
         row, column = tup[0]-1, tup[1]-1 
         
         if row > self.rows or column > self.columns:
+            raise Exception("Matrix Error: {index out of range}")
+
+        if row < 0 or column < 0:
             raise Exception("Matrix Error: {index out of range}")
 
         self.matrix[row][column] = new_value
@@ -91,11 +103,6 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
-
-
-
-
-
 
 
 
