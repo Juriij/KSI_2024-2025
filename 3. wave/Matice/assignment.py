@@ -1,29 +1,56 @@
 class Matrix:
     def __init__(self, array: list[list[int | float]]) -> None:
         """ Vytvoreni matice """
-        pass
+        standard_length = len(array[0])
+        for row in array:
+            if len(row) == standard_length:               
+                continue
+
+            raise Exception("Matrix Error: {number of elements per row is inconsistent}")
+
+        self.matrix = array
+        self.rows = len(array)
+        self.columns = len(array[0])
+
 
     @staticmethod
     def zero_matrix(height: int, width: int) -> 'Matrix':
         """ Staticka metoda na vytvoreni nulove matice """
-        pass
+        return Matrix([[0 for _ in range(width)] for _ in range(height)])
 
     @staticmethod
     def identity_matrix(side: int) -> 'Matrix':
         """ Staticka metoda na vytvoreni jednotkove matice """
-        pass
+        return Matrix([[1 if i == j else 0 for j in range(side)] for i in range(side)])
 
     def __str__(self) -> str:
         """ Pretizeni operatoru __str__ na prevod matice na string """
-        pass
+        text = ''
+        for row in self.matrix:
+            for elem in row:
+                text = text + str(elem) + " "
+            text = text[:-1]
+            text = text + "\n"
+
+        return text
 
     def __getitem__(self, tup: tuple[int, int]) -> int | float:
         """ Pretizeni getitemu na vypsani prvku matice """
-        pass
+        row, column = tup[0]-1, tup[1]-1 
+        
+        if row > self.rows or column > self.columns:
+            raise Exception("Matrix Error: {index out of range}")
+
+        return self.matrix[row][column]
 
     def __setitem__(self, tup: tuple[int, int], new_value: int | float) -> None:
         """ Pretizeni setitemu na nastaveni prvku matice """
-        pass
+        row, column = tup[0]-1, tup[1]-1 
+        
+        if row > self.rows or column > self.columns:
+            raise Exception("Matrix Error: {index out of range}")
+
+        self.matrix[row][column] = new_value
 
     def transposition(self) -> 'Matrix':
         """ Vrati novou matici, ktera je transpozici puvodni matice """
@@ -64,6 +91,18 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Matrix3D:
