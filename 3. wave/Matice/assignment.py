@@ -9,8 +9,8 @@ class Matrix:
             raise Exception("Matrix Error: {number of elements per row is inconsistent}")
 
         self.matrix = array
-        self.rows = len(array)
-        self.columns = len(array[0])
+        self.len_rows = len(array)
+        self.len_columns = len(array[0])
 
 
     @staticmethod
@@ -44,7 +44,7 @@ class Matrix:
         """ Pretizeni getitemu na vypsani prvku matice """
         row, column = tup[0]-1, tup[1]-1 
         
-        if row > self.rows or column > self.columns:
+        if row > self.len_rows or column > self.len_columns:
             raise Exception("Matrix Error: {index out of range}")
         
         if row < 0 or column < 0:
@@ -56,7 +56,7 @@ class Matrix:
         """ Pretizeni setitemu na nastaveni prvku matice """
         row, column = tup[0]-1, tup[1]-1 
         
-        if row > self.rows or column > self.columns:
+        if row > self.len_rows or column > self.len_columns:
             raise Exception("Matrix Error: {index out of range}")
 
         if row < 0 or column < 0:
@@ -66,11 +66,32 @@ class Matrix:
 
     def transposition(self) -> 'Matrix':
         """ Vrati novou matici, ktera je transpozici puvodni matice """
-        pass
+        return Matrix([[self.matrix[j][i] for j in range(self.len_rows)] for i in range(self.len_columns)])
+
 
     def get_info(self) -> tuple[tuple[int, int], bool, bool, bool, bool, bool]:
         """ Vypsani informaci o matici """
-        pass
+        dimensions = (self.len_rows, self.len_columns)
+        square_matrix = self.len_rows == self.len_columns
+        symmetric_matrix = (square_matrix) and all(self.matrix[i][j] == self.matrix[j][i]
+                                                    for i in range(self.len_rows) 
+                                                    for j in range(self.len_columns))   
+
+        antisymmetric_matrix = (square_matrix) and all(self.matrix[i][j] == -self.matrix[j][i]
+                                                    for i in range(self.len_rows) 
+                                                    for j in range(self.len_columns))  
+
+        row_echelon_form = (self.matrix[0][0] != 0) and all(self.matrix[i][:i] == [0 for _ in range(i)]
+                                                            for i in range(1, self.len_rows))
+
+        diagonal_matrix = (square_matrix) and all(self.matrix[i][j] != 0 if i == j 
+                                                    else self.matrix[i][j] == 0
+                                                    for i in range(self.len_rows)
+                                                    for j in range(self.len_columns))
+
+
+        return f'({dimensions}, {square_matrix}, {symmetric_matrix}, {antisymmetric_matrix}, {row_echelon_form}, {diagonal_matrix})'
+
 
     def __eq__(self, other_matrix: object) -> bool:
         """ Pretizeni operatoru ==; tzn jestli se dve matice rovnaji """
@@ -103,7 +124,6 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
-
 
 
 
