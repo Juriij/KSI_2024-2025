@@ -95,11 +95,34 @@ class Matrix:
 
     def __eq__(self, other_matrix: object) -> bool:
         """ Pretizeni operatoru ==; tzn jestli se dve matice rovnaji """
-        pass
+        if isinstance(other_matrix, Matrix):
+            if (other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns):
+                return all(self.matrix[i][j] == other_matrix.matrix[i][j]
+                            for i in range(self.len_rows)
+                            for j in range(self.len_columns))
+
+            else:
+                return False
+
+        else:
+            return False
+
 
     def __ne__(self, other_matrix: object) -> bool:
         """ Pretizeni operatoru !=; tzn jestli jsou dve matice rozdilne """
-        pass
+        if not isinstance(other_matrix, Matrix):
+            return True
+        
+        else:
+            if not ((other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns)):
+                return True
+
+            else:
+                return all(self.matrix[i][j] != other_matrix.matrix[i][j]
+                            for i in range(self.len_rows)
+                            for j in range(self.len_columns))
+
+
 
     def __add__(self, other_matrix: 'Matrix') -> 'Matrix':
         """ Pretizeni operatoru + na scitani matic """
@@ -126,7 +149,10 @@ class Matrix:
         pass
 
 
+# A = Matrix([[1, 2, 333], [1, 11, 3], [7, 7, 7]])
+# B = Matrix([[1, 2, 333], [1, 11, 5], [7, 7, 7]])
 
+# print(A != B)
 
 
 
