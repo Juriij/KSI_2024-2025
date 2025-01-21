@@ -126,19 +126,34 @@ class Matrix:
 
     def __add__(self, other_matrix: 'Matrix') -> 'Matrix':
         """ Pretizeni operatoru + na scitani matic """
-        pass
+        if (other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns):
+            return Matrix([[self.matrix[i][j] + other_matrix.matrix[i][j] for j in range(self.len_columns)] for i in range(self.len_rows)])
+
+        raise Exception("Matrix Error: {matrices aren't of the same size}")
+
+
+
 
     def __sub__(self, other_matrix: 'Matrix') -> 'Matrix':
         """ Pretizeni operatoru - na odecitani matic """
-        pass
+        if (other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns):
+            return Matrix([[self.matrix[i][j] - other_matrix.matrix[i][j] for j in range(self.len_columns)] for i in range(self.len_rows)])
+
+        raise Exception("Matrix Error: {matrices aren't of the same size}")
+
+
+
+    def __rmul__(self, constant: int | float) -> 'Matrix':
+        """ Pretizeni operatoru * na nasobeni matice konstantou """
+        return Matrix([[self.matrix[i][j] * constant for j in range(self.len_columns)] for i in range(self.len_rows)])
+
+
 
     def __mul__(self, other_matrix: 'Matrix') -> 'Matrix':
         """ Pretizeni operatoru * na nasobeni matic """
         pass
 
-    def __rmul__(self, constant: int | float) -> 'Matrix':
-        """ Pretizeni operatoru * na nasobeni matice konstantou """
-        pass
+
 
     def determinant(self) -> int | float:
         """ Vrati determinant matice """
@@ -147,6 +162,12 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
+
+
+
+
+
+
 
 
 
