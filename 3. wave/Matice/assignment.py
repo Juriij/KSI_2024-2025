@@ -118,7 +118,7 @@ class Matrix:
                 return True
 
             else:
-                return all(self.matrix[i][j] != other_matrix.matrix[i][j]
+                return any(self.matrix[i][j] != other_matrix.matrix[i][j]
                             for i in range(self.len_rows)
                             for j in range(self.len_columns))
 
@@ -147,12 +147,6 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
-
-
-# A = Matrix([[1, 2, 333], [1, 11, 3], [7, 7, 7]])
-# B = Matrix([[1, 2, 333], [1, 11, 5], [7, 7, 7]])
-
-# print(A != B)
 
 
 
