@@ -167,16 +167,51 @@ class Matrix:
         raise Exception("Matrix Error: {given argument is not a Matrix}")
 
 
+    def det_slice(self, matrix, start_point):
+        all_rows = []
+        for i in range(1, matrix.len_rows):
+            new_row = []
+
+            for j in range(matrix.len_columns):
+                if j == start_point:
+                    continue
+                new_row.append(matrix.matrix[i][j])
+
+            all_rows.append(new_row)
+
+        return Matrix(all_rows)
+
+
+
+    def det_auxilary(self, matrix):
+        if matrix.len_rows == 2 and matrix.len_columns == 2:
+            return (matrix.matrix[0][0] * matrix.matrix[1][1]) - (matrix.matrix[0][1] * matrix.matrix[1][0])
+        
+        result = 0
+
+        for j in range(matrix.len_columns):              # creates one new matrix
+            new_matrix = self.det_slice(matrix, j)       # returns reduced matrix
+            minor = (-1)**(1+(j+1)) * matrix.matrix[0][j] * self.det_auxilary(new_matrix)
+
+            result += minor
+
+        return result
 
 
     def determinant(self) -> int | float:
         """ Vrati determinant matice """
-        pass
+        if self.len_rows == self.len_columns:
+            return self.det_auxilary(self)
+
+        raise Exception("Matrix Error: {matrix is not of a square shape}")
+
+
+
+
 
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
         pass
-
 
 
 
