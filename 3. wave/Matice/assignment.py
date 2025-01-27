@@ -212,10 +212,37 @@ class Matrix:
 
 
 
+    def find_non_zero(self, current_column, matrix_a, matrix_b):
+        for i in range(matrix_a.len_rows):
+            if current_column == i:
+                continue
+
+            elif matrix_a.matrix[i][current_column] != 0:
+                if matrix_a.matrix[current_column][i] != 0:
+                    # TODO
+                    # make a swap for both matrices (matrix_a, matrix_b) and end the function
+                    pass
+
+ 
+
+
+        raise Exception("Matrix Error: {matrix doesn't have an inverse}")
+
+
+
     def inverse(self) -> 'Matrix':
         """ Vrati inverzni matici """
-        pass
+        if self.len_rows == self.len_columns:
+            matrix_a = Matrix(self.matrix)
+            matrix_b = self.identity_matrix(matrix_a.len_rows)
 
+            for i in range(matrix_a.len_rows):
+                if matrix_a.matrix[i][i] == 0:
+                    matrix_a, matrix_b = self.find_non_zero(i, matrix_a, matrix_b)
+
+
+
+        raise Exception("Matrix Error: {matrix is not of a square shape}")
 
 
 
