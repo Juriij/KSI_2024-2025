@@ -71,6 +71,9 @@ class Matrix:
 
     def get_info(self) -> tuple[tuple[int, int], bool, bool, bool, bool, bool]:
         """ Vypsani informaci o matici """
+        if self.len_rows == 1 and self.len_columns == 1:
+            return ((1,1), True, True, True, True, True)
+
         dimensions = (self.len_rows, self.len_columns)
         square_matrix = self.len_rows == self.len_columns
         symmetric_matrix = (square_matrix) and all(self.matrix[i][j] == self.matrix[j][i]
@@ -90,7 +93,7 @@ class Matrix:
                                                     for j in range(self.len_columns))
 
 
-        return f'({dimensions}, {square_matrix}, {symmetric_matrix}, {antisymmetric_matrix}, {row_echelon_form}, {diagonal_matrix})'
+        return (dimensions, square_matrix, symmetric_matrix, antisymmetric_matrix, row_echelon_form, diagonal_matrix)
 
 
     def __eq__(self, other_matrix: object) -> bool:
@@ -256,23 +259,16 @@ class Matrix:
             matrix_b = self.identity_matrix(matrix_a.len_rows)
 
             for i in range(matrix_a.len_rows):
-                # print(f'1: \n {matrix_a}')
                 if matrix_a.matrix[i][i] == 0:
                     matrix_a, matrix_b = self.find_non_zero(i, matrix_a, matrix_b)
 
-                # print(f'2: \n {matrix_a}')
                 # dividing the entire row by the pivot element   
                 pivot = matrix_a.matrix[i][i]
                 for j in range(matrix_a.len_columns):
                     matrix_a.matrix[i][j] = matrix_a.matrix[i][j] / pivot
                     matrix_b.matrix[i][j] = matrix_b.matrix[i][j] / pivot
 
-                # print(f'3: \n {matrix_a}')
                 # subtracting multiples of the current row "i" from other rows to get zeroes above and below the pivot of the current row
-                
-                # !!! dont forget to create logic for handling situations where 
-                # !!! the rows cannot perform subtraction becuase it would lead to 
-                # !!! a pivot turning into 0
 
                 for z in range(matrix_a.len_rows):
                     if z == i:
@@ -284,20 +280,11 @@ class Matrix:
 
                     multiply_by = matrix_a.matrix[z][i]
 
-                    # print("meant to be zeroed: ", matrix_a.matrix[z][i])
-                    # print("current i: ", i)
-                    # print("current z: ", z)
-                    # print("multiply by: ", multiply_by)
-
                     # perform the operation of subtracting current row from the other one
                     
-                    # print(f'intern: \n { Matrix([matrix_a.matrix[z]]) }') 
-                    # print(f'before mul intern: \n { (Matrix([matrix_a.matrix[i]])) }') 
-                    # print(f'after mul intern: \n { (multiply_by * Matrix([matrix_a.matrix[i]])) }') 
+
                     Performed_a = Matrix([matrix_a.matrix[z]]) - (multiply_by * Matrix([matrix_a.matrix[i]]))
 
-                    # print(f'intern: \n { Performed_a }')
-                    # print(f'intern: \n { Performed_a.matrix[0] }')  
 
                     matrix_a.matrix[z] = Performed_a.matrix[0]
 
@@ -305,30 +292,10 @@ class Matrix:
                     matrix_b.matrix[z] = Performed_b.matrix[0]
 
 
-
-                    #print(f'4: \n {matrix_a}')   
-
             return matrix_b
 
                     
         raise Exception("Matrix Error: {matrix is not of a square shape}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
