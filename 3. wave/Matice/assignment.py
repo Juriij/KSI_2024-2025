@@ -305,21 +305,76 @@ class Matrix:
 
 
 
-
-
 class Matrix3D:
     def __init__(self, array: list[list[list[int]]]) -> None:
         """ Vytvoreni matice 3D"""
-        pass
+        
+        standard_depth = len(array[0])
+        standard_length = len(array[0][0])
+
+        for depth in array:
+            if len(depth) == standard_depth:
+                for row in depth:
+                    if len(row) == standard_length:
+                        continue
+
+                    raise Exception("Matrix Error: {matrix doesn't have a consistent shape}")
+
+            else:
+                raise Exception("Matrix Error: {matrix doesn't have a consistent shape}")
+
+
+        self.matrix = array
+        self.len_depth = len(array)
+        self.len_rows = len(array[0])
+        self.len_columns = len(array[0][0])
+
+
 
     def __eq__(self, other_matrix: object) -> bool:
         """ Pretizeni operatoru ==; tzn jestli se dve 3D matice rovnaji """
-        pass
+        if isinstance(other_matrix, Matrix3D):
+            if (other_matrix.len_depth == self.len_depth) and (other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns):
+                return all(self.matrix[z][i][j] == other_matrix.matrix[z][i][j]
+                            for z in range(self.len_depth)
+                            for i in range(self.len_rows)
+                            for j in range(self.len_columns))
+
+            else:
+                return False
+
+        else:
+            return False
+
+
+
 
     def __ne__(self, other_matrix: object) -> bool:
         """ Pretizeni operatoru !=; tzn jestli jsou dve 3D matice rozdilne """
-        pass
+        if not isinstance(other_matrix, Matrix3D):
+            return True
+        
+        else:
+            if not ((other_matrix.len_depth == self.len_depth) and (other_matrix.len_rows == self.len_rows) and (other_matrix.len_columns == self.len_columns)):
+                return True
+
+            else:
+                return any(self.matrix[z][i][j] != other_matrix.matrix[z][i][j]
+                            for z in range(self.len_depth)
+                            for i in range(self.len_rows)
+                            for j in range(self.len_columns))
+
+
 
     def determinant_3d(self) -> int:
         """ Vrati determinant 3D matice """
         pass
+
+
+
+
+
+# Example usage
+A = Matrix3D([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+B = Matrix3D([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+print(A != B)
