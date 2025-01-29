@@ -211,14 +211,10 @@ class Matrix:
 
 
 
-
-
-
-    def row_sub_valid(self, matrix, current_pivot, affected_pivot, multiply_by) -> bool:
-        """ checking if pivot is turned into zero in the process of substraction"""
-        print(f'row sub check calculation result: {matrix.matrix[affected_pivot][affected_pivot] - (matrix.matrix[current_pivot][affected_pivot] * multiply_by)}' )
-        return matrix.matrix[affected_pivot][affected_pivot] - (matrix.matrix[current_pivot][affected_pivot] * multiply_by) != 0
         
+
+
+
 
 
 
@@ -234,19 +230,18 @@ class Matrix:
 
 
 
+
     def find_non_zero(self, current_column, matrix_a, matrix_b):
-        for i in range(matrix_a.len_rows):
-            if current_column == i:
-                continue
+        
+        for i in range(current_column+1, matrix_a.len_rows):
 
-            elif matrix_a.matrix[i][current_column] != 0:
-                if matrix_a.matrix[current_column][i] != 0:
-                    # make a swap for both matrices (matrix_a, matrix_b) and return the new matrices
+            if matrix_a.matrix[i][current_column] != 0:
+                # make a swap for both matrices (matrix_a, matrix_b) and return the new matrices
 
-                    matrix_a = self.swap_rows(matrix_a, current_column, i)
-                    matrix_b = self.swap_rows(matrix_b, current_column, i)
+                matrix_a = self.swap_rows(matrix_a, current_column, i)
+                matrix_b = self.swap_rows(matrix_b, current_column, i)
 
-                    return matrix_a, matrix_b
+                return matrix_a, matrix_b
 
 
 
@@ -261,18 +256,18 @@ class Matrix:
             matrix_b = self.identity_matrix(matrix_a.len_rows)
 
             for i in range(matrix_a.len_rows):
-                print(f'1: \n {matrix_a}')
+                # print(f'1: \n {matrix_a}')
                 if matrix_a.matrix[i][i] == 0:
                     matrix_a, matrix_b = self.find_non_zero(i, matrix_a, matrix_b)
 
-                print(f'2: \n {matrix_a}')
+                # print(f'2: \n {matrix_a}')
                 # dividing the entire row by the pivot element   
                 pivot = matrix_a.matrix[i][i]
                 for j in range(matrix_a.len_columns):
                     matrix_a.matrix[i][j] = matrix_a.matrix[i][j] / pivot
                     matrix_b.matrix[i][j] = matrix_b.matrix[i][j] / pivot
 
-                print(f'3: \n {matrix_a}')
+                # print(f'3: \n {matrix_a}')
                 # subtracting multiples of the current row "i" from other rows to get zeroes above and below the pivot of the current row
                 
                 # !!! dont forget to create logic for handling situations where 
@@ -283,134 +278,40 @@ class Matrix:
                     if z == i:
                         continue
 
-                    if matrix_a.matrix[z][i] < 0:
-                        multiply_by = -matrix_a.matrix[z][i]
-                    elif matrix_a.matrix[z][i] > 0:
-                        multiply_by = matrix_a.matrix[z][i]
-                    else: # the number above/below happens to be zero
+                    if matrix_a.matrix[z][i] == 0:
                         continue
+
+
+                    multiply_by = matrix_a.matrix[z][i]
+
+                    # print("meant to be zeroed: ", matrix_a.matrix[z][i])
+                    # print("current i: ", i)
+                    # print("current z: ", z)
+                    # print("multiply by: ", multiply_by)
+
+                    # perform the operation of subtracting current row from the other one
                     
-                    print("meant to be zeroed: ", matrix_a.matrix[z][i])
-                    print("current i: ", i)
-                    print("current z: ", z)
-                    print("multiply by: ", multiply_by)
-                    if self.row_sub_valid(matrix_a, i, z, multiply_by):
-                        # perform the operation of subtracting current row from the other one
-                        
-                        # print(f'intern: \n { Matrix([matrix_a.matrix[z]]) }') 
-                        # print(f'intern: \n { (multiply_by * Matrix([matrix_a.matrix[i]])) }') 
-                        Performed_a = Matrix([matrix_a.matrix[z]]) - (multiply_by * Matrix([matrix_a.matrix[i]]))
+                    # print(f'intern: \n { Matrix([matrix_a.matrix[z]]) }') 
+                    # print(f'before mul intern: \n { (Matrix([matrix_a.matrix[i]])) }') 
+                    # print(f'after mul intern: \n { (multiply_by * Matrix([matrix_a.matrix[i]])) }') 
+                    Performed_a = Matrix([matrix_a.matrix[z]]) - (multiply_by * Matrix([matrix_a.matrix[i]]))
 
-                        # print(f'intern: \n { Performed_a }')
-                        # print(f'intern: \n { Performed_a.matrix[0] }')  
+                    # print(f'intern: \n { Performed_a }')
+                    # print(f'intern: \n { Performed_a.matrix[0] }')  
 
-                        matrix_a.matrix[z] = Performed_a.matrix[0]
+                    matrix_a.matrix[z] = Performed_a.matrix[0]
 
-                        Performed_b = Matrix([matrix_b.matrix[z]]) - (multiply_by * Matrix([matrix_b.matrix[i]]))
-                        matrix_b.matrix[z] = Performed_b.matrix[0]
-
-                    else:
-                        print("A pivot would have been turned into a zero, you need to figure out how to handle this situation")
+                    Performed_b = Matrix([matrix_b.matrix[z]]) - (multiply_by * Matrix([matrix_b.matrix[i]]))
+                    matrix_b.matrix[z] = Performed_b.matrix[0]
 
 
-                    print(f'4: \n {matrix_a}')   
 
+                    #print(f'4: \n {matrix_a}')   
 
             return matrix_b
 
                     
         raise Exception("Matrix Error: {matrix is not of a square shape}")
-
-
-
-
-
-
-
-
-
-
-
-
-def debug_matrix_inverse():
-    """ Debug function for testing inverse matrix calculation """
-
-    # 2x2 Matrix - Simple case
-    A = Matrix([[4, 7], [2, 6]])  
-    # Expected inverse:
-    # A⁻¹ = (1/det(A)) * adj(A)
-    # det(A) = (4*6 - 7*2) = 24 - 14 = 10
-    # A⁻¹ = (1/10) * [[6, -7], [-2, 4]] = [[0.6, -0.7], [-0.2, 0.4]]
-    expected_A_inv = Matrix([[0.6, -0.7], [-0.2, 0.4]])
-    #assert A.inverse() == expected_A_inv, "Test Failed: 2x2 inverse matrix is incorrect"
-
-    # 3x3 Matrix - More complex case
-    B = Matrix([
-        [3, 0, 2],
-        [2, 0, -2],
-        [0, 1, 1]
-    ])
-    # Expected inverse:
-    expected_B_inv = Matrix([
-        [0.2, 0.2, 0],
-        [-0.2, 0.3, 1],
-        [0.2, -0.3, 0]
-    ])
-    assert B.inverse() == expected_B_inv, "Test Failed: 3x3 inverse matrix is incorrect"
-
-    # 4x4 Matrix - Larger test case
-    C = Matrix([
-        [1, 2, 3, 4],
-        [2, 3, 4, 5],
-        [3, 4, 5, 6],
-        [4, 5, 6, 7]
-    ])
-    try:
-        C.inverse()
-        raise AssertionError("Test Failed: Singular matrix should not have an inverse")
-    except Exception as e:
-        print(f"Correctly caught error for singular matrix: {e}")
-
-    # Non-square Matrix - Should raise an exception
-    D = Matrix([
-        [1, 2, 3],
-        [4, 5, 6]
-    ])
-    try:
-        D.inverse()
-        raise AssertionError("Test Failed: Non-square matrix should not have an inverse")
-    except Exception as e:
-        print(f"Correctly caught error for non-square matrix: {e}")
-
-    print("All inverse matrix tests passed successfully!")
-
-# Run the debug function
-debug_matrix_inverse()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
