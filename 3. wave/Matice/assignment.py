@@ -289,8 +289,6 @@ class Matrix:
         matrix.matrix[original_row_index] = suitable_row
         matrix.matrix[suitable_row_index] = original_row
 
-        return matrix
-
     def find_non_zero(self, current_column, matrix_a, matrix_b):
         for i in range(current_column+1, matrix_a.len_rows):
 
@@ -298,8 +296,8 @@ class Matrix:
                 # make a swap for both matrices (matrix_a, matrix_b)
                 # and return the new matrices
 
-                matrix_a = self.swap_rows(matrix_a, current_column, i)
-                matrix_b = self.swap_rows(matrix_b, current_column, i)
+                self.swap_rows(matrix_a, current_column, i)
+                self.swap_rows(matrix_b, current_column, i)
 
                 return matrix_a, matrix_b
 
