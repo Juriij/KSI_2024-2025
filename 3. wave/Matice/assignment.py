@@ -366,15 +366,58 @@ class Matrix3D:
 
 
 
+
     def determinant_3d(self) -> int:
         """ Vrati determinant 3D matice """
-        pass
+        if self.len_rows == self.len_columns == self.len_depth:
+            if self.len_rows == 1:
+                return self.matrix[0][0][0]
+                
+            return self.det_auxilary(self)
+
+        raise Exception("Matrix Error: {matrix is not of a square shape}")
 
 
 
 
 
-# Example usage
-A = Matrix3D([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
-B = Matrix3D([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
-print(A != B)
+    def det_auxilary(self, matrix):
+        if matrix.len_rows == 2 and matrix.len_columns == 2 and matrix.len_depth == 2:
+            return (matrix.matrix[0][0][0] * matrix.matrix[1][1][1]) - (matrix.matrix[1][0][1] * matrix.matrix[0][1][0]) + (matrix.matrix[0][1][1] * matrix.matrix[1][0][0]) - (matrix.matrix[0][0][1] * matrix.matrix[1][1][0])
+        
+        result = 0
+
+        for i in range(matrix.len_rows):
+            for j in range(matrix.len_columns):              # creates one new matrix
+                new_matrix = self.det_slice(matrix, i, j)    # returns reduced matrix
+                minor = (-1)**((i+1)+(j+1)+1) * matrix.matrix[0][i][j] * self.det_auxilary(new_matrix)
+
+                result += minor
+
+        return result
+ 
+
+
+
+    def det_slice(self, matrix, anchor_i, anchor_j):
+        all_layers = []
+        for z in range(1, matrix.len_depth):
+            layer = []
+            
+            for i in range(matrix.len_rows):
+                if i == anchor_i:
+                    continue
+
+                row = []
+
+                for j in range(matrix.len_columns):
+                    if j == anchor_j:
+                        continue
+
+                    row.append(matrix.matrix[z][i][j])
+
+                layer.append(row)
+
+            all_layers.append(layer)
+
+        return Matrix3D(all_layers)
