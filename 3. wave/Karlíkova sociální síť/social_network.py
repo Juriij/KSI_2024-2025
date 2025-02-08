@@ -4,6 +4,7 @@ class Animal(ABC):
     def __init__(self, name, university_num):
         self.name = name
         self.university_num = university_num
+        self.friends = set()
 
     def __repr__(self):
         return f'Ahoj, já jsem {self.name}!'
@@ -79,78 +80,81 @@ class AkademickyPracovnik(Animal):
         
 
 
-## !!!!!!!!!! HOST CAN BE FRIENDS ONLY WITH ACADEMIC WORKERS !!!!!!!!!!! ##
+
 class Host(Animal):
     def __init__(self, name, university_num):
         super().__init__(name, university_num)
 
-        if not (self.university_num > 1000000):
-            raise ValueError("Error, id should be in greater than 1 000 000.")
+        if not (self.university_num >= 1000000):
+            raise ValueError("Error, id should be greater or equal to 1 000 000.")
+
+
+
+
+class University:
+    def __init__(self):
+        self.users = []
+
+
+    def add_user(self, new_user):
+        for user in self.users:
+            if user.name == new_user.name and user.university_num == new_user.university_num:
+                raise Exception("Error, this user already exists")
+
+        self.users.append(new_user)
+
+
+    def in_database(self, Users):
+        passed = False
+
+        for user in self.users:
+            if Users == []:
+                passed = True
+                break
+
+            if user in Users:
+                Users.pop(Users.index(user))
+
+        if not passed:
+            raise Exception("Error, not all the users are added to the database")
+
+
+    def connect(self, A, B):
+        self.in_database([A, B])
+
+        if isinstance(A, Host):
+            if not isinstance(B, AkademickyPracovnik):
+                raise Exception("Error, Host can be friends only with Academic Worker")
+
+        elif isinstance(B, Host):
+            if not isinstance(A, AkademickyPracovnik):
+                raise Exception("Error, Host can be friends only with Academic Worker")
+
+        A.friends.add(B)
+        B.friends.add(A)
+            
+
+    def disconnect(self, A, B):
+        self.in_database([A, B])
+        A.friends.remove(B)
+        B.friends.remove(A)
+
+
+    def get_friends(self, A):
+        self.in_database([A])
+        return A.friends
+    
+
+    def common_friends(self, Users):
+        self.in_database(Users)
+
+        if not Users:
+            return set() 
         
+        return set.intersection(*(user.friends for user in Users))
 
 
+    def find_connection(self, A, B):
+        self.in_database([A, B])
 
-
-
-
-def test_university_users():
-    print("Starting tests...")
-    
-    # Test Student creation
-    try:
-        student = Student("Petr", 150000)
-        print(student)  # Should print "Ahoj, já jsem Petr!"
-    except ValueError as e:
-        print("Failed to create valid Student:", e)
-    
-    # Test invalid Student creation
-    try:
-        invalid_student = Student("Jan", 666)  # Should raise ValueError
-        print("Error: Created invalid student!")
-    except ValueError:
-        print("Correctly caught invalid student ID.")
-    
-    # Test Academic Worker creation
-    try:
-        academic = AkademickyPracovnik("Dr. Novák", 800000)
-        print(academic)  # Should print "Ahoj, já jsem Dr. Novák!"
-    except ValueError as e:
-        print("Failed to create valid Academic Worker:", e)
-    
-    # Test invalid Academic Worker creation
-    try:
-        invalid_academic = AkademickyPracovnik("Dr. Chybný", 500000)  # Should raise ValueError
-        print("Error: Created invalid academic worker!")
-    except ValueError:
-        print("Correctly caught invalid academic worker ID.")
-    
-    # Test Host creation
-    try:
-        host = Host("Visiting Researcher", 1000001)
-        print(host)  # Should print "Ahoj, já jsem Visiting Researcher!"
-    except ValueError as e:
-        print("Failed to create valid Host:", e)
-    
-    # Test invalid Host creation
-    try:
-        invalid_host = Host("Invalid Host", 999999)  # Should raise ValueError
-        print("Error: Created invalid host!")
-    except ValueError:
-        print("Correctly caught invalid host ID.")
-    
-    # Test comparisons
-    try:
-        assert student < academic, "Comparison failed: student should be less than academic."
-        assert academic > student, "Comparison failed: academic should be greater than student."
-        assert student != academic, "Comparison failed: student and academic should not be equal."
-        assert student == Student("Another Student", 150000), "Comparison failed: students with same ID should be equal."
-        assert academic >= student, "Comparison failed: academic should be greater or equal to student."
-        assert student <= academic, "Comparison failed: student should be less or equal to academic."
-        print("All comparisons passed!")
-    except AssertionError as e:
-        print("Comparison test failed:", e)
-    
-    print("All tests completed.")
-
-# Run the tests
-test_university_users()
+        # ...
