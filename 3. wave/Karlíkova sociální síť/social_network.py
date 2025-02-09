@@ -1,4 +1,5 @@
 from abc import ABC
+from collections import deque
 
 class Animal(ABC):
     def __init__(self, name, university_num):
@@ -8,6 +9,9 @@ class Animal(ABC):
 
     def __repr__(self):
         return f'Ahoj, já jsem {self.name}!'
+    
+    def __hash__(self):
+        return hash((self.university_num, self.name))
     
 
     def __eq__(self, other):
@@ -107,13 +111,15 @@ class University:
     def in_database(self, Users):
         passed = False
 
+        copied_Users = [user for user in Users] # copy
+
         for user in self.users:
-            if Users == []:
+            if user in copied_Users:
+                copied_Users.pop(copied_Users.index(user))
+
+            if copied_Users == []:
                 passed = True
                 break
-
-            if user in Users:
-                Users.pop(Users.index(user))
 
         if not passed:
             raise Exception("Error, not all the users are added to the database")
@@ -146,15 +152,42 @@ class University:
     
 
     def common_friends(self, Users):
-        self.in_database(Users)
+        if len(set(Users)) != len(Users):
+            raise Exception("Error, duplicate in the input list. Can't compare common friends of two identical objects")
 
+        self.in_database(Users)
+        
         if not Users:
             return set() 
         
         return set.intersection(*(user.friends for user in Users))
+    
+
+
+    def find_path(self, A, B, depth, lengths, visited):
+        if A in visited:
+            return lengths  
+
+        visited.add(A)
+
+        for friend in A.friends:
+            if friend is B:
+                lengths.add(depth)
+                return lengths  
+
+            self.find_path(friend, B, depth + 1, lengths, visited)
+
+        return lengths
+
 
 
     def find_connection(self, A, B):
-        self.in_database([A, B])
+        self.in_database([A, B])  
 
-        # ...
+        lengths = self.find_path(A, B, 0, set(), set())  
+
+        return -1 if not lengths else min(lengths)
+    
+
+    def check_hypothesis(self):
+        pass
