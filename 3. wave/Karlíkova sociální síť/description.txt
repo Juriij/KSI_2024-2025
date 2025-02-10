@@ -1,0 +1,44 @@
+Popis architektury (pouzivatelia siete):
+
+Vytvoril som abstraktnu triedu "Animal", ktora obsahuje 
+spolocne atributy pre vsetkych pouzivatelov siete a tiez porovnavacie magicke metody a 
+magicku metodu __hash__, aby sa s instanciami triedy dalo pracovat v mnozine.
+Z triedy "Animal" dedia triedy: "Student", "AkademickyPracovnik" a "Host". Kazda z tychto
+konkretnych tried ma implementovanu specificku kontorolu, ci bolo zadane validne univerzitne id.
+
+
+
+Popis algoritmu find_connection():
+
+Algoritmus najprv skontroluje, ci sa zadani pouzivatelia nachadzaju v databaze univerzity. Ak ano,
+spusti rekurzivnu funkciu find_path(), ktora funguje na principe DFS. Funkcia prehladava priestor
+a vzdy ked objavi cestu medzi zadanymi pouzivatelmi, ulozi ich vzdialenost a pokracuje v prehladavani.
+Po prehladani celej siete vrati hodnoty vzdialenosti a ta najkratsia je vysledkom volania metody. 
+
+
+
+Popis algoritmu check_hypothesis():
+
+Algoritmus pouziva viacere metody a preto ich popisem oddelene:
+
+1. is_connected():
+Zistuje ci je siet pouzivatelov prepojena. Funguje tak, ze spusti BFS a prejde vsetkych pouzivatelov
+cez ich spojenia. Ak boli vsetci navstiveni, siet je prepojena. V opacnom pripade nie je
+
+
+2. bfs_shortest_paths():
+Zisti najkratsiu cestu od prveho pouzivatela ku vsetkym ostatnym. Tiez pouziva BFS na prehladavanie
+siete. Pocas prehladavanie sleduje pocet uzivatelov, ktorych uz navstivil. Na konci vrati slovnik
+vzdialenosti.
+
+
+3. find_diameter():
+Hlada najkratsiu najdlhsiu cestu v sieti. To znamena, ze zisti najkratsie cesty ku vsetkym
+ostatnym pouzivatelom pomocou vyssie spominanej metody: bfs_shortest_paths(). Pocas celej doby
+si pamata maximalne najdene vzdialenosti. Ku koncu vrati najkratsiu najdlhsiu cestu.
+
+
+
+4. check_hypothesis():
+Zisti ci je siet prepojena, zavolanim is_connected(), a ak je, vola metodu find_diameter().
+Ak siet nie je prepojena vracia hodnotu -1.

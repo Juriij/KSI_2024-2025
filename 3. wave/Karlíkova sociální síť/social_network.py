@@ -187,7 +187,58 @@ class University:
         lengths = self.find_path(A, B, 0, set(), set())  
 
         return -1 if not lengths else min(lengths)
+
+
     
 
+
+    def is_connected(self):
+        if not self.users:
+            return False  
+
+        visited = set()
+        queue = deque([self.users[0]])  
+
+        while queue:
+            user = queue.popleft()
+            if user not in visited:
+                visited.add(user)
+                for friend in user.friends:
+                    if friend not in visited:
+                        queue.append(friend)
+
+        return len(visited) == len(self.users)
+    
+
+    def bfs_shortest_paths(self, start_user):
+        distances = {start_user: 0}
+        queue = deque([(start_user, 0)])  
+
+        while queue:
+            user, dist = queue.popleft()
+            for friend in user.friends:
+                if friend not in distances:
+                    distances[friend] = dist + 1 if user != start_user else 0
+                    queue.append((friend, distances[friend]))
+
+        return distances
+
+    def find_diameter(self):
+        diameter = 0
+
+        for user in self.users:
+            distances = self.bfs_shortest_paths(user)
+            valid_distances = [distances[friend] for friend in distances if friend != user]
+            if not valid_distances:
+                continue
+            max_distance = max(valid_distances)
+            if max_distance > diameter:
+                diameter = max_distance
+
+        return diameter
+
     def check_hypothesis(self):
-        pass
+        if not self.is_connected():
+            return -1
+
+        return self.find_diameter()
