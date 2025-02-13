@@ -1,18 +1,27 @@
+c.add_penguin("Jurlik")
+c.add_nonpenguin("Jurlik", "vsetky tucniacice")
+
+
+
+
+
 from typing import Set
 from value_lib import ValueFactory, Value
 
 
 
-def reference_count(vertex):
-    # print("the current vertex is: ", vertex.value.get_value())
-
-    if len(vertex.referencing_me) == 0:
+def reference_count(vertex, added_set, visited):
+    if vertex not in visited and len(vertex.referencing_me) == 0:
+        # print("freeing:", vertex)
         vertex.value.free() 
+        added_set.remove(vertex)
+        
+        visited.add(vertex)
 
         for successor in vertex.successors:
             successor.referencing_me.remove(vertex)
             
-            reference_count(successor)
+            reference_count(successor, added_set, visited)
 
 
 class Vertex:
@@ -20,6 +29,14 @@ class Vertex:
         self.value = value
         self.successors = []
         self.referencing_me = set()
+    
+    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # def __repr__(self):s
+    #     return f'{self.value.get_value()}'
+    
+    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 class Country:
@@ -27,12 +44,26 @@ class Country:
         self.__value_factory = value_factory
         self.penguins = set()
 
+        self.added = set()
+        self.referenced_by_iterator = []
+
+
+
+    def expand_iter_ref(self, new):
+        self.referenced_by_iterator.extend(new)
+
+
+    def contract_iter_ref(self, removed):
+        self.referenced_by_iterator.pop(self.referenced_by_iterator.index(removed))
+
+
     def add_penguin(self, name: str) -> None:
         penguin = Vertex(self.__value_factory.make_value(name))
 
         penguin.referencing_me.add(self)
 
         self.penguins.add(penguin)
+        self.added.add(penguin)
 
     def add_nonpenguin(self, parent: str, value: str) -> None:
         searched: Set[Vertex] = set()
@@ -50,6 +81,7 @@ class Country:
 
             current.successors.append(new_vertex)
             new_vertex.referencing_me.add(current)
+            self.added.add(new_vertex)
 
             return True
         for vertex in current.successors:
@@ -72,11 +104,11 @@ class Country:
     def kill(self, name: str) -> None:
         for penguin in self.penguins:
             if penguin.value.get_value() == name:
-                self.penguins.remove(penguin)   # kill the connection Country -> Penguin
+                self.penguins.remove(penguin)   
                 
-                penguin.referencing_me.remove(self)
+                penguin.referencing_me.remove(self)   # kill the connection Country -> Penguin
 
-                reference_count(penguin)
+                reference_count(penguin, self.added, set())
 
                 break
 
@@ -92,11 +124,11 @@ class Country:
                     path_values.insert(0, penguin.value)
                     path_vertexes.insert(0, penguin)
 
-                    return iter(Path(path_found, path_values, path_vertexes))
+                    return iter(Path(path_found, path_values, path_vertexes, self.expand_iter_ref, self.contract_iter_ref, self.added))
                 
-                return iter(Path(True, [penguin.value], [penguin]))
+                return iter(Path(True, [penguin.value], [penguin], self.expand_iter_ref, self.contract_iter_ref, self.added))
 
-        return iter(Path(False, [], []))
+        return iter(Path(False, [], [], self.expand_iter_ref, self.contract_iter_ref, self.added))
 
 
 
@@ -117,11 +149,61 @@ class Country:
             
         return False, [], []
 
+    
+    def search(self, parent, unreachable, visited):
+        for vertex in parent.successors:
+            if vertex not in visited:
+                visited.add(vertex)
+
+                if vertex in unreachable:
+                    unreachable.remove(vertex)
+                
+                self.search(vertex, unreachable, visited)
+
 
 
 
     def collect(self) -> None:
-        pass
+        unreachable_country = {obj for obj in self.added}
+
+        #print(unreachable_country)
+
+        for parent in self.penguins:
+            unreachable_country.remove(parent)
+            self.search(parent, unreachable_country, set())
+
+        #print(unreachable_country)
+
+        unreachable_iter = self.added - set(self.referenced_by_iterator)
+        #print(unreachable_iter)
+
+
+        unreachables = unreachable_country & unreachable_iter
+
+
+        for unreachable in unreachables:
+
+            for friend in unreachable.referencing_me:
+                if isinstance(friend, Vertex):
+                    friend.successors.pop(friend.successors.index(unreachable))
+
+            unreachable.value.free() 
+            
+            self.added.remove(unreachable)
+
+
+            for successor in unreachable.successors:
+                successor.referencing_me.remove(unreachable)
+                
+                setik = unreachables
+                reference_count(successor, self.added, setik)
+
+
+
+
+
+
+
 
 
 
@@ -130,7 +212,7 @@ class Country:
 
 
 class Path:
-    def __init__(self, path_found, path_values, path_vertexes):
+    def __init__(self, path_found, path_values, path_vertexes, expand_iter, contract_iter, added):
         if not path_found:
             raise StopIteration
 
@@ -139,8 +221,16 @@ class Path:
         self.path_values = path_values
         self.path_vertexes = path_vertexes
 
+        self.added = added
+        self.contract_iter = contract_iter
+
         for vertex in self.path_vertexes:
             vertex.referencing_me.add(self)
+
+        expand_iter(self.path_vertexes)
+
+        # for vertex in self.path_vertexes:
+        #     print(vertex.value.get_value())
 
 
     def __iter__(self):
@@ -148,12 +238,21 @@ class Path:
 
 
     def __next__(self):
+        #print(f"I am hererer: current vertex {self.path_values[self.count_val].get_value()}")
+       # print("the self.count_ref is:", self.count_ref)
+        #print("the self.count_value is:", self.count_val)
         if self.count_ref != -1:
+            #print(self.count_ref)
+            
             vertex = self.path_vertexes[self.count_ref]
 
-            vertex.referencing_me.remove(self)  # remove reference
+            # print(vertex.value.get_value())
 
-            reference_count(vertex)  # conduct reference counting
+            vertex.referencing_me.remove(self)  # remove reference
+            
+            self.contract_iter(vertex)
+
+            reference_count(vertex, self.added, set())  # conduct reference counting
 
             
         if not self.count_val > len(self.path_values)-1:
@@ -166,79 +265,3 @@ class Path:
         self.count_val += 1
         
         return value
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Základné testy
-vf = ValueFactory()
-c = Country(vf)
-c.add_penguin("NieKarlik")
-c.add_nonpenguin("NieKarlik", "pocitac")
-c.add_penguin("ByvalyKral")
-c.add_nonpenguin("ByvalyKral", "sen ovladnut svet")
-c.add_nonpenguin("sen ovladnut svet", "vsetky tucniacice")
-
-
-
-assert len(vf._values) == 5
-assert all([not x._is_disposed for x in vf._values])
-
-c.kill("ByvalyKral")
-assert not vf._values[0]._is_disposed
-assert not vf._values[1]._is_disposed
-assert vf._values[2]._is_disposed
-assert vf._values[3]._is_disposed
-assert vf._values[4]._is_disposed
-
-
-
-# for pingu in c.penguins:
-#     print(pingu.value.get_value())
-
-
-
-
-c.add_penguin("ByvalyKral")
-c.add_nonpenguin("ByvalyKral", "sen ovladnut svet")
-c.add_nonpenguin("sen ovladnut svet", "vsetky tucniacice")
-
-
-# for pingu in c.penguins:
-#     print(pingu.value.get_value())
-#     if pingu.value.get_value() == "ByvalyKral":
-#         print("is disposed:", pingu.value._is_disposed)
-
-
-
-
-for val in c.has("ByvalyKral", "vsetky tucniacice"):
-    if val.get_value() == "sen ovladnut svet":
-        c.kill("ByvalyKral")
-        assert vf._values[5]._is_disposed
-        assert not vf._values[6]._is_disposed
-        assert not vf._values[7]._is_disposed
-
-assert vf._values[6]._is_disposed
-assert vf._values[7]._is_disposed
-
-c.add_nonpenguin("pocitac", "suciastky")
-# trochu hack, lebo sa mnozina neda indexovat
-c.add_edge(next(iter(c.penguins)).successors[0].successors[0], 
-           next(iter(c.penguins)).successors[0])
-c.kill("NieKarlik")
-
-assert vf._values[0]._is_disposed
-assert not vf._values[1]._is_disposed
-assert not vf._values[8]._is_disposed
