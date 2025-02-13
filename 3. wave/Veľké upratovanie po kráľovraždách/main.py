@@ -1,26 +1,17 @@
-c.add_penguin("Jurlik")
-c.add_nonpenguin("Jurlik", "vsetky tucniacice")
-
-
-
-
-
 from typing import Set
 from value_lib import ValueFactory, Value
 
 
-
 def reference_count(vertex, added_set, visited):
     if vertex not in visited and len(vertex.referencing_me) == 0:
-        # print("freeing:", vertex)
-        vertex.value.free() 
+        vertex.value.free()
         added_set.remove(vertex)
-        
+
         visited.add(vertex)
 
         for successor in vertex.successors:
             successor.referencing_me.remove(vertex)
-            
+
             reference_count(successor, added_set, visited)
 
 
@@ -29,14 +20,6 @@ class Vertex:
         self.value = value
         self.successors = []
         self.referencing_me = set()
-    
-    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # def __repr__(self):s
-    #     return f'{self.value.get_value()}'
-    
-    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # # TO BE REMOVER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 class Country:
@@ -47,15 +30,13 @@ class Country:
         self.added = set()
         self.referenced_by_iterator = []
 
-
-
     def expand_iter_ref(self, new):
         self.referenced_by_iterator.extend(new)
 
-
     def contract_iter_ref(self, removed):
-        self.referenced_by_iterator.pop(self.referenced_by_iterator.index(removed))
-
+        self.referenced_by_iterator.pop(
+            self.referenced_by_iterator.index(removed)
+        )
 
     def add_penguin(self, name: str) -> None:
         penguin = Vertex(self.__value_factory.make_value(name))
@@ -71,7 +52,7 @@ class Country:
             if self.__add_nonpenguin_aux(penguin, parent, value, searched):
                 break
 
-    def __add_nonpenguin_aux(self, current: Vertex, parent: str, new: str, 
+    def __add_nonpenguin_aux(self, current: Vertex, parent: str, new: str,
                              searched: Set[Vertex]) -> bool:
         if current in searched:
             return False
@@ -89,37 +70,29 @@ class Country:
                 return True
         return False
 
-
     def add_edge(self, first: Vertex, second: Vertex) -> None:
         if second not in first.successors:
             first.successors.append(second)
 
             second.referencing_me.add(first)
 
-
-
-
-
-
     def kill(self, name: str) -> None:
         for penguin in self.penguins:
             if penguin.value.get_value() == name:
-                self.penguins.remove(penguin)   
-                
-                penguin.referencing_me.remove(self)   # kill the connection Country -> Penguin
+                self.penguins.remove(penguin)
+
+                penguin.referencing_me.remove(self)
 
                 reference_count(penguin, self.added, set())
 
                 break
 
-    
-
-
-    def has(self, name: str, dest: str) -> 'iterator':
+    def has(self, name: str, dest: str):
         for penguin in self.penguins:
             if penguin.value.get_value() == name:
                 if name != dest:
-                    path_found, path_values, path_vertexes = self.find_path(penguin, dest)
+                    path_found, path_values, path_vertexes = \
+                        self.find_path(penguin, dest)
 
                     path_values.insert(0, penguin.value)
                     path_vertexes.insert(0, penguin)
@@ -129,9 +102,6 @@ class Country:
                 return iter(Path(True, [penguin.value], [penguin], self.expand_iter_ref, self.contract_iter_ref, self.added))
 
         return iter(Path(False, [], [], self.expand_iter_ref, self.contract_iter_ref, self.added))
-
-
-
 
 
     def find_path(self, node, dest):
@@ -161,25 +131,17 @@ class Country:
                 self.search(vertex, unreachable, visited)
 
 
-
-
     def collect(self) -> None:
         unreachable_country = {obj for obj in self.added}
-
-        #print(unreachable_country)
 
         for parent in self.penguins:
             unreachable_country.remove(parent)
             self.search(parent, unreachable_country, set())
 
-        #print(unreachable_country)
 
         unreachable_iter = self.added - set(self.referenced_by_iterator)
-        #print(unreachable_iter)
-
 
         unreachables = unreachable_country & unreachable_iter
-
 
         for unreachable in unreachables:
 
@@ -191,24 +153,11 @@ class Country:
             
             self.added.remove(unreachable)
 
-
             for successor in unreachable.successors:
                 successor.referencing_me.remove(unreachable)
                 
                 setik = unreachables
                 reference_count(successor, self.added, setik)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Path:
@@ -229,39 +178,27 @@ class Path:
 
         expand_iter(self.path_vertexes)
 
-        # for vertex in self.path_vertexes:
-        #     print(vertex.value.get_value())
-
-
     def __iter__(self):
         return self
 
-
     def __next__(self):
-        #print(f"I am hererer: current vertex {self.path_values[self.count_val].get_value()}")
-       # print("the self.count_ref is:", self.count_ref)
-        #print("the self.count_value is:", self.count_val)
         if self.count_ref != -1:
-            #print(self.count_ref)
-            
+           
             vertex = self.path_vertexes[self.count_ref]
 
-            # print(vertex.value.get_value())
-
             vertex.referencing_me.remove(self)  # remove reference
-            
+
             self.contract_iter(vertex)
 
-            reference_count(vertex, self.added, set())  # conduct reference counting
+            reference_count(vertex, self.added, set())  
 
-            
         if not self.count_val > len(self.path_values)-1:
             value = self.path_values[self.count_val]
-        
+
         else:
             raise StopIteration
 
         self.count_ref += 1
         self.count_val += 1
-        
+
         return value

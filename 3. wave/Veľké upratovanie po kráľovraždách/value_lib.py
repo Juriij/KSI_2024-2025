@@ -11,6 +11,7 @@ class Value:
         assert not self._is_disposed
         return self._value
 
+
 class ValueFactory:
     def __init__(self):
         self._values = []
