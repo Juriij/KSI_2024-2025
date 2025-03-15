@@ -3,10 +3,43 @@ segment code
         MOV DS, BX
 
         MOV AL, [nums]
-        CMP AL, [1]
-        
+        MOV DI, 1
 
-        HLT
+loop:
+    MOV DL, [nums+DI]
+    CMP DL, 0
+    JZ end_program
+
+    CMP AL, DL
+    JZ no_change
+    JL decrease
+    JG increment
+
+
+increment:
+    INC DL
+    JMP update_memory
+
+
+decrease:
+    DEC DL
+    JMP update_memory
+
+
+no_change:
+    JMP update_memory
+
+
+update_memory:
+    MOV [nums+DI], DL 
+    ADD DI, 1
+    JMP loop
+
+
+
+end_program:
+    HLT
+
 
 segment data
 nums    db 64
