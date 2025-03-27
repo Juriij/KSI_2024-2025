@@ -64,6 +64,9 @@ class KPU:
             if register.isnumeric():
                 raise Exception("Error: Register name cannot be numeric")
             
+        self.basic_register_record = registers
+        self.basic_registers = list({register:0} for register in registers)
+            
         self.min_number = min_number
         self.max_number = max_number
 
@@ -74,10 +77,13 @@ class KPU:
             raise Exception("Error: Maximum value cannot be lower than zero")
         
         self.operations = operations
-        
 
+        # init of special registers
+        self.PC = 0
+        self.SP = len(self.memory) - 1
+        self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
 
-
+        self.state = Status.OK
 
 
 
