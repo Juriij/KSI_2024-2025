@@ -50,10 +50,36 @@ class Instruction:
         self.operands = operands
 
 
+
+
+
+
 class KPU:
     def __init__(self, memory_size: int, registers: set[str], min_number: int, max_number: int, operations: set[Operation] | None = None):
-        # TODO
-        pass
+        if memory_size < 0:
+            raise Exception("Error: Wrong memory size")
+        self.memory = [0 for _ in range(memory_size)]
+
+        for register in registers:
+            if register.isnumeric():
+                raise Exception("Error: Register name cannot be numeric")
+            
+        self.min_number = min_number
+        self.max_number = max_number
+
+        if len(self.memory) > self.max_number:
+            raise Exception("Error: Memory is longer than the maximum value allowed")
+        
+        if 0 > self.max_number:
+            raise Exception("Error: Maximum value cannot be lower than zero")
+        
+        self.operations = operations
+        
+
+
+
+
+
 
     def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
         # TODO
@@ -65,6 +91,18 @@ class KPU:
 
     # TODO
     # Add your own functions
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
