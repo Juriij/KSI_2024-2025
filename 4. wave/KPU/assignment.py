@@ -1,4 +1,5 @@
 from enum import Enum
+import inspect
 
 
 class Operation(Enum):
@@ -64,8 +65,8 @@ class KPU:
             if register.isnumeric():
                 raise Exception("Error: Register name cannot be numeric")
             
-        self.basic_register_record = registers
-        self.basic_registers = list({register:0} for register in registers)
+        self.register_record = registers
+        self.registers = list({register:0} for register in registers)
             
         self.min_number = min_number
         self.max_number = max_number
@@ -88,8 +89,114 @@ class KPU:
 
 
     def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
-        # TODO
-        pass
+        # status is not OK
+        if self.state != Status.OK:
+            return self.end_program()
+        
+        # PC register points to invalid instruction index
+        if not (0 <= self.PC <= len(code)):
+            self.state = Status.MEMORY_ERROR
+            return self.end_program()
+        
+        # loading current instruction
+        instruction = code[self.PC]
+
+        # incrementing PC and overflow handling
+        self.PC += 1
+        self.PC = self.PC % len(code)
+
+
+        # checking validity of the instruction
+        if self.operations is None:
+            if not (instruction.op in Operation.__members__):
+                self.state = Status.BAD_INSTRUCTION
+                return self.end_program()
+
+        else:
+            if not (instruction.op in self.operations):
+                self.state = Status.BAD_INSTRUCTION
+                return self.end_program()
+            
+
+        # checking validity of the operands
+        method = getattr(self, instruction.op.name.lower())
+        sig = inspect.signature(method)
+
+        if (len(sig.parameters) - 1) != len(instruction.operands):
+            self.state = Status.BAD_OPERAND
+            return self.end_program()
+        
+
+        if instruction.op.name in set("ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"):
+            for register in instruction.operands:
+                if register not in self.register_record:
+                    self.state = Status.BAD_OPERAND
+                    return self.end_program()
+         
+        # if instruction.op.name in set("CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"):
+        #     if not(instruction.operands[0].isdecimal()) or not(self.min_number <= int(instruction.operands[0]) <= self.max_number):
+        #         self.state = Status.BAD_OPERAND
+        #         return self.end_program()
+        
+                
+
+        # elif instruction.op.name == "READ":
+        #     if instruction.operands[0] not in self.register_record:
+        #         self.state = Status.BAD_OPERAND
+        #         return self.end_program()
+            
+        #     if (instruction.operands[1] not in self.register_record): 
+        #         if instruction.operands[1][0] == "-":
+        #             if not(instruction.operands[1][1:].isdecimal()):
+        #                 self.state = Status.BAD_OPERAND
+        #                 return self.end_program()
+
+        #         else:
+        #             if not(instruction.operands[1].isdecimal()):
+        #                 self.state = Status.BAD_OPERAND
+        #                 return self.end_program()
+
+
+
+        # elif instruction.op.name == "WRITE":
+
+        
+
+
+        elif instruction.op.name == "SET":
+            if instruction.operands[0] not in self.register_record:
+                self.state = Status.BAD_OPERAND
+                return self.end_program()
+            
+            if instruction.operands[1][0] == "-":
+                if not(instruction.operands[1][1:].isdecimal()):
+                        self.state = Status.BAD_OPERAND
+                        return self.end_program()
+
+            else:
+                if not(instruction.operands[1].isdecimal()):
+                    self.state = Status.BAD_OPERAND
+                    return self.end_program()
+                
+
+            if not(self.min_number <= int(instruction.operands[1]) <= self.max_number):
+                self.state = Status.BAD_OPERAND
+                return self.end_program()
+        
+
+        
+
+        
+
+
+
+
+
+
+    def end_program(self):
+        return tuple(self.state, self.memory, self.PC)
+
+
 
     def reset(self) -> None:
         # TODO
