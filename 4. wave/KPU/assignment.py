@@ -108,7 +108,7 @@ class KPU:
 
         # checking validity of the instruction
         if self.operations is None:
-            if not (instruction.op in Operation.__members__):
+            if not isinstance(instruction.op, Operation):
                 self.state = Status.BAD_INSTRUCTION
                 return self.end_program()
 
@@ -117,50 +117,95 @@ class KPU:
                 self.state = Status.BAD_INSTRUCTION
                 return self.end_program()
             
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UNCOMMENT
+        # # checking validity of the operands
+        # method = getattr(self, instruction.op.name.lower())
+        # sig = inspect.signature(method)
 
-        # checking validity of the operands
-        method = getattr(self, instruction.op.name.lower())
-        sig = inspect.signature(method)
+        # if (len(sig.parameters) - 1) != len(instruction.operands):
+        #     self.state = Status.BAD_OPERAND
+        #     return self.end_program()
 
-        if (len(sig.parameters) - 1) != len(instruction.operands):
-            self.state = Status.BAD_OPERAND
-            return self.end_program()
-        
-
-        if instruction.op.name in set("ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"):
+        if instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"}:
             for register in instruction.operands:
                 if register not in self.register_record:
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
          
-        # if instruction.op.name in set("CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"):
-        #     if not(instruction.operands[0].isdecimal()) or not(self.min_number <= int(instruction.operands[0]) <= self.max_number):
-        #         self.state = Status.BAD_OPERAND
-        #         return self.end_program()
+        elif instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
+            if not(instruction.operands[0].isdecimal()) or not(self.min_number <= int(instruction.operands[0]) <= self.max_number):
+                self.state = Status.BAD_OPERAND
+                return self.end_program()
         
                 
 
-        # elif instruction.op.name == "READ":
-        #     if instruction.operands[0] not in self.register_record:
-        #         self.state = Status.BAD_OPERAND
-        #         return self.end_program()
+
+
+        elif instruction.op.name == "READ":
+            if instruction.operands[0] not in self.register_record:
+                self.state = Status.BAD_OPERAND
+                return self.end_program()
             
-        #     if (instruction.operands[1] not in self.register_record): 
-        #         if instruction.operands[1][0] == "-":
-        #             if not(instruction.operands[1][1:].isdecimal()):
-        #                 self.state = Status.BAD_OPERAND
-        #                 return self.end_program()
+            # second operand is register
+            if (instruction.operands[1] in self.register_record):
+                for register in self.registers:
+                    if instruction.operands[1] in register:
+                        if not(0 <= register[instruction.operands[1]] <= len(self.memory)):
+                            self.state = Status.MEMORY_ERROR
+                            return self.end_program()      
 
-        #         else:
-        #             if not(instruction.operands[1].isdecimal()):
-        #                 self.state = Status.BAD_OPERAND
-        #                 return self.end_program()
+            # second operand is address or rubbish      
+            if instruction.operands[1][0] == "-" or not(instruction.operands[1].isdecimal()):
+                if instruction.operands[1][1:].isdecimal():
+                    self.state = Status.MEMORY_ERROR
+                    return self.end_program() 
+
+                else:
+                    self.state = Status.BAD_OPERAND
+                    return self.end_program()      
+
+            if instruction.operands[1].isdecimal():
+                if instruction.operands[1] >= len(self.memory):
+                    self.state = Status.MEMORY_ERROR
+                    return self.end_program()                     
 
 
 
-        # elif instruction.op.name == "WRITE":
 
+
+
+        elif instruction.op.name == "WRITE":
+            if instruction.operands[1] not in self.register_record:
+                self.state = Status.BAD_OPERAND
+                return self.end_program()         
+
+
+            # second operand is register
+            if (instruction.operands[0] in self.register_record):
+                for register in self.registers:
+                    if instruction.operands[0] in register:
+                        if not(0 <= register[instruction.operands[0]] <= len(self.memory)):
+                            self.state = Status.MEMORY_ERROR
+                            return self.end_program()      
+
+            # second operand is address or rubbish      
+            if instruction.operands[0][0] == "-" or not(instruction.operands[0].isdecimal()):
+                if instruction.operands[0][1:].isdecimal():
+                    self.state = Status.MEMORY_ERROR
+                    return self.end_program() 
+
+                else:
+                    self.state = Status.BAD_OPERAND
+                    return self.end_program()      
+
+            if instruction.operands[0].isdecimal():
+                if int(instruction.operands[0]) >= len(self.memory):
+                    self.state = Status.MEMORY_ERROR
+                    return self.end_program()     
         
+
+
+
 
 
         elif instruction.op.name == "SET":
@@ -194,7 +239,7 @@ class KPU:
 
 
     def end_program(self):
-        return tuple(self.state, self.memory, self.PC)
+        return (self.state, self.memory, self.PC)
 
 
 
@@ -219,22 +264,9 @@ class KPU:
 
 
 if __name__ == "__main__":
-    cpu = KPU(15, {"AX", "BX"}, 0, 255)
+    cpu = KPU(15, {"AX", "BX"}, -50, 255)
     program = [
-        Instruction(Operation.INPUT, ["AX"]),
-        Instruction(Operation.SET, ["BX", "10"]),
-        Instruction(Operation.OUTPUT, ["AX"]),
-        Instruction(Operation.WRITE, ["BX", "BX"]),
-        Instruction(Operation.PUSH, ["BX"]),
-        Instruction(Operation.INC, ["AX"]),
-        Instruction(Operation.DEC, ["BX"]),
-        Instruction(Operation.JNZ, ["2"]),
+        Instruction(Operation.WRITE, ["AX", "BX"]),
         Instruction(Operation.HLT, []),
     ]
-    # This program should read one chararcter from input
-    # and print it and 9 following chars in ASCII.
     print(cpu.run_program(program))
-
-    # Expected status: HALTED
-    # Expected memory: [0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    # Expected PC: 9
