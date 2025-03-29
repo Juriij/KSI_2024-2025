@@ -1,6 +1,4 @@
 from enum import Enum
-import inspect
-
 
 class Operation(Enum):
     ADD = 1
@@ -89,6 +87,141 @@ class KPU:
 
 
 
+
+
+
+
+
+    def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
+        while True:
+            # status is not OK
+            if self.state != Status.OK:
+                return self.end_program()
+            
+            # PC register points to invalid instruction index
+            if not (0 <= self.PC <= len(code)):
+                self.state = Status.MEMORY_ERROR
+                return self.end_program()
+            
+            # loading current instruction
+            self.instruction = code[self.PC]
+
+            # incrementing PC and overflow handling
+            self.PC += 1
+            self.PC = self.PC % len(code)
+
+
+            output = self.validate_instruction()
+            if output is not None:
+                return output
+            
+            output = self.validate_operands()
+            if output is not None:
+                return output
+            
+
+            # perform instruction 
+            self.operation = getattr(self, self.instruction.op.name.lower(), None)
+
+            # reset flag register if arithmetic operation is due to execution 
+            if self.instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP"}:
+                self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
+
+            self.operation()
+
+
+
+    def end_program(self):
+        return (self.state, self.memory, self.PC)
+
+
+
+
+    # def calc_add_overflow(self, operand1, operand2):
+    #     result = operand1 + operand2
+
+    #     if result > self.max_number:
+    #         return (result - self.max_number) + self.min_number
+
+    #     # result is lower than self.min_number
+    #     else:
+    #         return self.max_number - (self.min_number - result) 
+
+
+
+
+
+    # IMPLEMENT FLAGS !!!
+    def add(self):
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register_one_value = int(register[self.instruction.operands[0]])
+            
+            elif self.instruction.operands[1] in register:
+                register_two_value = int(register[self.instruction.operands[1]])
+
+
+        # checking if overflow occured
+        if not(self.min_number <= (register_one_value + register_two_value) <= self.max_number):
+            self.flag_register["Overflow"] = True
+            new_value = self.calc_add_overflow(register_one_value, register_two_value)
+
+        else:
+            new_value = register_one_value + register_two_value
+
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = new_value
+
+
+
+    def sub(self):
+        pass
+
+
+
+    def inc(self):
+        pass
+
+
+
+    def dec(self):
+        pass
+
+
+
+    def cmp(self):
+        pass
+
+
+
+
+    def set(self):
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = int(self.instruction.operands[1])
+
+
+    def hlt(self):
+        self.state = Status.HALTED
+
+
+
+
+
+
+
+
+    def reset(self) -> None:
+        # TODO
+        pass
+
+
+
+
+
+
     def validate_instruction(self):
         # checking validity of the instruction
         if self.operations is None:
@@ -104,17 +237,32 @@ class KPU:
         return None
 
 
+    def validate_amount_params(self):
+        if self.instruction.op.name in {"ADD", "SUB", "CMP", "READ", "WRITE", "MOV", "SET"}:
+            if not len(self.instruction.operands) == 2:
+                return False
+            
+        elif self.instruction.op.name in {"INC", "DEC", "PUSH", "POP", "CALL", "INPUT", "OUTPUT", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
+            if not len(self.instruction.operands) == 1:
+                return False
+            
+        # RET, HLT, NOP
+        else:
+            if not len(self.instruction.operands) == 0:
+                return False
+
+        return True
+
 
     def validate_operands(self):
         # checking validity of the operands
         register_found = False
  
-        method = getattr(self, self.instruction.op.name.lower())
-        sig = inspect.signature(method)
 
-        if (len(sig.parameters) - 1) != len(self.instruction.operands):
+        if not(self.validate_amount_params()):
             self.state = Status.BAD_OPERAND
             return self.end_program()
+
 
         if self.instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"}:
             for register in self.instruction.operands:
@@ -222,60 +370,6 @@ class KPU:
 
 
 
-    def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
-        while True:
-            # status is not OK
-            if self.state != Status.OK:
-                return self.end_program()
-            
-            # PC register points to invalid instruction index
-            if not (0 <= self.PC <= len(code)):
-                self.state = Status.MEMORY_ERROR
-                return self.end_program()
-            
-            # loading current instruction
-            self.instruction = code[self.PC]
-
-            # incrementing PC and overflow handling
-            self.PC += 1
-            self.PC = self.PC % len(code)
-
-
-            output = self.validate_instruction()
-            if output is not None:
-                return output
-            
-            output = self.validate_operands()
-            if output is not None:
-                return output
-            
-
-
-            # !!!!! HERE CODE: perform instruction !!!!!!!!
-
-            # !!!!! HERE CODE: perform instruction !!!!!!!!
-
-
-
-
-
-
-    def end_program(self):
-        return (self.state, self.memory, self.PC)
-
-
-
-    def reset(self) -> None:
-        # TODO
-        pass
-
-    # TODO
-    # Add your own functions
-
-
-
-
-
 
 
 
@@ -288,9 +382,9 @@ class KPU:
 if __name__ == "__main__":
     cpu = KPU(15, {"AX", "BX"}, -50, 255)
     program = [
-        Instruction(Operation.SET, ["AX", "50"]),
-        Instruction(Operation.SET, ["BX", "50"]),
-        Instruction(Operation.WRITE, ["AX", "BX"]),
+        Instruction(Operation.SET, ["AX", "8"]),
+        Instruction(Operation.SET, ["BX", "16"]),
+        Instruction(Operation.ADD, ["AX", "BX"]),
         Instruction(Operation.HLT, []),
     ]
     print(cpu.run_program(program))
