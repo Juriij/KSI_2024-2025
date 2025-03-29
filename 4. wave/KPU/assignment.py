@@ -137,21 +137,27 @@ class KPU:
 
 
 
-    # def calc_add_overflow(self, operand1, operand2):
-    #     result = operand1 + operand2
+    def calc_overflow(self, result):
+        if result > self.max_number:
+            return abs((result % self.max_number) - 1) + self.min_number 
 
-    #     if result > self.max_number:
-    #         return (result - self.max_number) + self.min_number
-
-    #     # result is lower than self.min_number
-    #     else:
-    #         return self.max_number - (self.min_number - result) 
+        # result is lower than self.min_number
+        else:
+            return self.max_number - abs((result % self.min_number) + 1)
 
 
 
+    def even_parity(self, result):
+        if result < 0:
+            magnitude = abs(result)
+            count_ones = bin(magnitude).count('1') + 1
+        else:
+            count_ones = bin(result).count('1')
+        
+        return count_ones % 2 == 0
 
 
-    # IMPLEMENT FLAGS !!!
+
     def add(self):
         for register in self.registers:
             if self.instruction.operands[0] in register:
@@ -164,10 +170,19 @@ class KPU:
         # checking if overflow occured
         if not(self.min_number <= (register_one_value + register_two_value) <= self.max_number):
             self.flag_register["Overflow"] = True
-            new_value = self.calc_add_overflow(register_one_value, register_two_value)
+            new_value = self.calc_overflow(register_one_value + register_two_value)
 
         else:
             new_value = register_one_value + register_two_value
+
+
+        if new_value < 0:
+            self.flag_register["Sign"] = True
+
+        elif new_value == 0:
+            self.flag_register["Zero"] = True
+
+        self.flag_register["Parity"] = self.even_parity(new_value)
 
 
         for register in self.registers:
@@ -176,23 +191,131 @@ class KPU:
 
 
 
+
     def sub(self):
-        pass
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register_one_value = int(register[self.instruction.operands[0]])
+            
+            elif self.instruction.operands[1] in register:
+                register_two_value = int(register[self.instruction.operands[1]])
+
+        # checking if overflow occured
+        if not(self.min_number <= (register_one_value - register_two_value) <= self.max_number):
+            self.flag_register["Overflow"] = True
+            new_value = self.calc_overflow(register_one_value - register_two_value)
+
+        else:
+            new_value = register_one_value - register_two_value
+
+
+        if new_value < 0:
+            self.flag_register["Sign"] = True
+
+        elif new_value == 0:
+            self.flag_register["Zero"] = True
+
+        self.flag_register["Parity"] = self.even_parity(new_value)
+
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = new_value
+                
+        
 
 
 
     def inc(self):
-        pass
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register_one_value = int(register[self.instruction.operands[0]])
+
+        # checking if overflow occured
+        if not(self.min_number <= (register_one_value + 1) <= self.max_number):
+            self.flag_register["Overflow"] = True
+            new_value = self.calc_overflow(register_one_value + 1)
+
+        else:
+            new_value = register_one_value + 1
+
+
+        if new_value < 0:
+            self.flag_register["Sign"] = True
+
+        elif new_value == 0:
+            self.flag_register["Zero"] = True
+
+        self.flag_register["Parity"] = self.even_parity(new_value)
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = new_value
+
+
 
 
 
     def dec(self):
-        pass
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register_one_value = int(register[self.instruction.operands[0]])
+
+        # checking if overflow occured
+        if not(self.min_number <= (register_one_value - 1) <= self.max_number):
+            self.flag_register["Overflow"] = True
+            new_value = self.calc_overflow(register_one_value - 1)
+
+        else:
+            new_value = register_one_value - 1
+
+
+        if new_value < 0:
+            self.flag_register["Sign"] = True
+
+        elif new_value == 0:
+            self.flag_register["Zero"] = True
+
+        self.flag_register["Parity"] = self.even_parity(new_value)
+
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = new_value
+
+
+
+
 
 
 
     def cmp(self):
-        pass
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register_one_value = int(register[self.instruction.operands[0]])
+            
+            elif self.instruction.operands[1] in register:
+                register_two_value = int(register[self.instruction.operands[1]])
+
+        # checking if overflow occured
+        if not(self.min_number <= (register_one_value - register_two_value) <= self.max_number):
+            self.flag_register["Overflow"] = True
+            new_value = self.calc_overflow(register_one_value - register_two_value)
+
+        else:
+            new_value = register_one_value - register_two_value
+
+
+        if new_value < 0:
+            self.flag_register["Sign"] = True
+
+        elif new_value == 0:
+            self.flag_register["Zero"] = True
+
+        self.flag_register["Parity"] = self.even_parity(new_value)
+
+
+
 
 
 
@@ -382,9 +505,9 @@ class KPU:
 if __name__ == "__main__":
     cpu = KPU(15, {"AX", "BX"}, -50, 255)
     program = [
-        Instruction(Operation.SET, ["AX", "8"]),
-        Instruction(Operation.SET, ["BX", "16"]),
-        Instruction(Operation.ADD, ["AX", "BX"]),
+        Instruction(Operation.SET, ["AX", "-50"]),
+        Instruction(Operation.SET, ["BX", "50"]),
+        Instruction(Operation.CMP, ["AX", "BX"]),
         Instruction(Operation.HLT, []),
     ]
     print(cpu.run_program(program))
