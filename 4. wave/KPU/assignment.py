@@ -88,150 +88,172 @@ class KPU:
 
 
 
-    def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
-        # status is not OK
-        if self.state != Status.OK:
-            return self.end_program()
-        
-        # PC register points to invalid instruction index
-        if not (0 <= self.PC <= len(code)):
-            self.state = Status.MEMORY_ERROR
-            return self.end_program()
-        
-        # loading current instruction
-        instruction = code[self.PC]
 
-        # incrementing PC and overflow handling
-        self.PC += 1
-        self.PC = self.PC % len(code)
-
-
+    def validate_instruction(self):
         # checking validity of the instruction
         if self.operations is None:
-            if not isinstance(instruction.op, Operation):
+            if not isinstance(self.instruction.op, Operation):
                 self.state = Status.BAD_INSTRUCTION
                 return self.end_program()
 
         else:
-            if not (instruction.op in self.operations):
+            if not (self.instruction.op in self.operations):
                 self.state = Status.BAD_INSTRUCTION
                 return self.end_program()
             
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UNCOMMENT
-        # # checking validity of the operands
-        # method = getattr(self, instruction.op.name.lower())
-        # sig = inspect.signature(method)
+        return None
 
-        # if (len(sig.parameters) - 1) != len(instruction.operands):
-        #     self.state = Status.BAD_OPERAND
-        #     return self.end_program()
 
-        if instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"}:
-            for register in instruction.operands:
+
+    def validate_operands(self):
+        # checking validity of the operands
+        register_found = False
+ 
+        method = getattr(self, self.instruction.op.name.lower())
+        sig = inspect.signature(method)
+
+        if (len(sig.parameters) - 1) != len(self.instruction.operands):
+            self.state = Status.BAD_OPERAND
+            return self.end_program()
+
+        if self.instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP", "MOV", "PUSH", "POP", "INPUT", "OUTPUT"}:
+            for register in self.instruction.operands:
                 if register not in self.register_record:
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
          
-        elif instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
-            if not(instruction.operands[0].isdecimal()) or not(self.min_number <= int(instruction.operands[0]) <= self.max_number):
+        elif self.instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
+            if not(self.instruction.operands[0].isdecimal()) or not(self.min_number <= int(self.instruction.operands[0]) <= self.max_number):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
         
-                
 
 
 
-        elif instruction.op.name == "READ":
-            if instruction.operands[0] not in self.register_record:
+        elif self.instruction.op.name == "READ":
+            if self.instruction.operands[0] not in self.register_record:
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
             
             # second operand is register
-            if (instruction.operands[1] in self.register_record):
+            if (self.instruction.operands[1] in self.register_record):
                 for register in self.registers:
-                    if instruction.operands[1] in register:
-                        if not(0 <= register[instruction.operands[1]] <= len(self.memory)):
+                    if self.instruction.operands[1] in register:
+                        register_found = True
+                        if not(0 <= register[self.instruction.operands[1]] <= len(self.memory)):
                             self.state = Status.MEMORY_ERROR
                             return self.end_program()      
 
-            # second operand is address or rubbish      
-            if instruction.operands[1][0] == "-" or not(instruction.operands[1].isdecimal()):
-                if instruction.operands[1][1:].isdecimal():
-                    self.state = Status.MEMORY_ERROR
-                    return self.end_program() 
+            if not register_found:
+                # second operand is address or rubbish      
+                if self.instruction.operands[1][0] == "-" or not(self.instruction.operands[1].isdecimal()):
+                    if self.instruction.operands[1][1:].isdecimal():
+                        self.state = Status.MEMORY_ERROR
+                        return self.end_program() 
 
-                else:
-                    self.state = Status.BAD_OPERAND
-                    return self.end_program()      
+                    else:
+                        self.state = Status.BAD_OPERAND
+                        return self.end_program()      
 
-            if instruction.operands[1].isdecimal():
-                if instruction.operands[1] >= len(self.memory):
-                    self.state = Status.MEMORY_ERROR
-                    return self.end_program()                     
-
-
-
+                if self.instruction.operands[1].isdecimal():
+                    if int(self.instruction.operands[1]) >= len(self.memory):
+                        self.state = Status.MEMORY_ERROR
+                        return self.end_program()                     
 
 
 
-        elif instruction.op.name == "WRITE":
-            if instruction.operands[1] not in self.register_record:
+
+        elif self.instruction.op.name == "WRITE":
+            if self.instruction.operands[1] not in self.register_record:
                 self.state = Status.BAD_OPERAND
                 return self.end_program()         
 
 
             # second operand is register
-            if (instruction.operands[0] in self.register_record):
+            if (self.instruction.operands[0] in self.register_record):
                 for register in self.registers:
-                    if instruction.operands[0] in register:
-                        if not(0 <= register[instruction.operands[0]] <= len(self.memory)):
+                    if self.instruction.operands[0] in register:
+                        register_found = True
+                        if not(0 <= register[self.instruction.operands[0]] <= len(self.memory)):
                             self.state = Status.MEMORY_ERROR
                             return self.end_program()      
+            
+            if not register_found:
+                # second operand is address or rubbish      
+                if self.instruction.operands[0][0] == "-" or not(self.instruction.operands[0].isdecimal()):
+                    if self.instruction.operands[0][1:].isdecimal():
+                        self.state = Status.MEMORY_ERROR
+                        return self.end_program() 
 
-            # second operand is address or rubbish      
-            if instruction.operands[0][0] == "-" or not(instruction.operands[0].isdecimal()):
-                if instruction.operands[0][1:].isdecimal():
-                    self.state = Status.MEMORY_ERROR
-                    return self.end_program() 
+                    else:
+                        self.state = Status.BAD_OPERAND
+                        return self.end_program()      
 
-                else:
-                    self.state = Status.BAD_OPERAND
-                    return self.end_program()      
-
-            if instruction.operands[0].isdecimal():
-                if int(instruction.operands[0]) >= len(self.memory):
-                    self.state = Status.MEMORY_ERROR
-                    return self.end_program()     
+                if self.instruction.operands[0].isdecimal():
+                    if int(self.instruction.operands[0]) >= len(self.memory):
+                        self.state = Status.MEMORY_ERROR
+                        return self.end_program()     
+                
         
 
-
-
-
-
-        elif instruction.op.name == "SET":
-            if instruction.operands[0] not in self.register_record:
+        elif self.instruction.op.name == "SET":
+            if self.instruction.operands[0] not in self.register_record:
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
             
-            if instruction.operands[1][0] == "-":
-                if not(instruction.operands[1][1:].isdecimal()):
+            if self.instruction.operands[1][0] == "-":
+                if not(self.instruction.operands[1][1:].isdecimal()):
                         self.state = Status.BAD_OPERAND
                         return self.end_program()
 
             else:
-                if not(instruction.operands[1].isdecimal()):
+                if not(self.instruction.operands[1].isdecimal()):
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
                 
 
-            if not(self.min_number <= int(instruction.operands[1]) <= self.max_number):
+            if not(self.min_number <= int(self.instruction.operands[1]) <= self.max_number):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
-        
+            
 
-        
+        return None
 
-        
+
+
+
+    def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
+        while True:
+            # status is not OK
+            if self.state != Status.OK:
+                return self.end_program()
+            
+            # PC register points to invalid instruction index
+            if not (0 <= self.PC <= len(code)):
+                self.state = Status.MEMORY_ERROR
+                return self.end_program()
+            
+            # loading current instruction
+            self.instruction = code[self.PC]
+
+            # incrementing PC and overflow handling
+            self.PC += 1
+            self.PC = self.PC % len(code)
+
+
+            output = self.validate_instruction()
+            if output is not None:
+                return output
+            
+            output = self.validate_operands()
+            if output is not None:
+                return output
+            
+
+
+            # !!!!! HERE CODE: perform instruction !!!!!!!!
+
+            # !!!!! HERE CODE: perform instruction !!!!!!!!
 
 
 
@@ -266,6 +288,8 @@ class KPU:
 if __name__ == "__main__":
     cpu = KPU(15, {"AX", "BX"}, -50, 255)
     program = [
+        Instruction(Operation.SET, ["AX", "50"]),
+        Instruction(Operation.SET, ["BX", "50"]),
         Instruction(Operation.WRITE, ["AX", "BX"]),
         Instruction(Operation.HLT, []),
     ]
