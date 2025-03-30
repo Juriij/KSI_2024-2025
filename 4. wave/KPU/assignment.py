@@ -101,12 +101,10 @@ class KPU:
             
             # incrementing PC
             self.PC += 1
+            self.PC = self.PC % self.max_number+1
             
             # PC register points to invalid instruction index
             if not (0 <= self.PC <= self.len_code-1):
-                print("hehrere")
-                print(self.PC)
-
                 self.state = Status.MEMORY_ERROR
                 return self.end_program()
             
@@ -462,7 +460,8 @@ class KPU:
 
 
 
-
+    def nop(self):
+        pass
 
     def hlt(self):
         self.state = Status.HALTED
@@ -532,9 +531,8 @@ class KPU:
                     return self.end_program()
 
 
-
         elif self.instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
-            if not(self.instruction.operands[0].isdecimal()) or not(0 <= int(self.instruction.operands[0]) <= self.len_code-1):
+            if not(self.instruction.operands[0].isdecimal()):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
 
@@ -635,31 +633,14 @@ class KPU:
 
 
 
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
+    cpu = KPU(2, {"A", "B"}, 0, 5)
+
     program = [
-        Instruction(Operation.SET, ["AX", "8"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),       
-        Instruction(Operation.CALL, ["7"]),
-
-
-        Instruction(Operation.HLT, []),
-
-        Instruction(Operation.SET, ["AX", "38"]),
-        Instruction(Operation.RET, []),
-
-    ]
+    Instruction(Operation.NOP, []),
+    Instruction(Operation.NOP, []),
+    Instruction(Operation.NOP, []),
+]
+    
 print(cpu.run_program(program))
 print(cpu.registers)
