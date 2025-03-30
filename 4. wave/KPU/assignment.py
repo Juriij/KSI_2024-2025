@@ -49,10 +49,6 @@ class Instruction:
         self.operands = operands
 
 
-
-
-
-
 class KPU:
     def __init__(self, memory_size: int, registers: set[str], min_number: int, max_number: int, operations: set[Operation] | None = None):
         if memory_size < 0:
@@ -69,7 +65,10 @@ class KPU:
         self.min_number = min_number
         self.max_number = max_number
 
-        if len(self.memory) > self.max_number:
+        if not(self.min_number <= 0 <= self.max_number):
+            raise Exception("Error: Emulator cannot be initialized without 0 allowed")
+
+        if (len(self.memory)-1) > self.max_number:
             raise Exception("Error: Memory is longer than the maximum value allowed")
         
         if 0 > self.max_number:
@@ -83,11 +82,15 @@ class KPU:
         self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
 
         self.state = Status.OK
+        
 
-
-
-
-
+    def reset(self) -> None:
+        self.memory = [0 for _ in range(len(self.memory))]
+        self.registers = list({register:0} for register in self.register_record)
+        self.PC = 0
+        self.SP = len(self.memory) - 1
+        self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
+        self.state = Status.OK
 
 
 
@@ -138,16 +141,15 @@ class KPU:
     def end_program(self):
         return (self.state, self.memory, self.PC)
 
-
-
-
+        
     def calc_overflow(self, result):
-        if result > self.max_number:
-            return abs((result % self.max_number) - 1) + self.min_number 
-
-        # result is lower than self.min_number
-        else:
-            return self.max_number - abs((result % self.min_number) + 1)
+        range_size = self.max_number - self.min_number + 1
+        
+        offset_min = result - self.min_number
+        
+        wrapped = offset_min % range_size
+        
+        return self.min_number + wrapped
 
 
 
@@ -159,14 +161,82 @@ class KPU:
             count_ones = bin(result).count('1')
         
         return count_ones % 2 == 0
+    
+
+    def input(self):
+        new_value = input()
+
+        new_value = new_value[0]
+        new_value = ord(new_value)
+
+        new_value = self.calc_overflow(new_value)
+
+        if not(self.min_number <= new_value <= self.max_number):
+            self.state = Status.BAD_OPERAND
+            return
+        
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = new_value
+                break
+
+
+    def output(self):
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                out_val = register[self.instruction.operands[0]]
+                break
+
+        try:
+            out_val = chr(out_val)
+            print(out_val, end="")
+        
+        except:
+            self.state = Status.MEMORY_ERROR
 
 
     def jmp(self):
-        pass
+        self.PC = int(self.instruction.operands[0])
 
 
+    def jz(self):
+        if self.flag_register["Zero"]:
+            self.jmp()
 
 
+    def jnz(self):
+        if not self.flag_register["Zero"]:
+            self.jmp()
+
+
+    def jo(self):
+        if self.flag_register["Overflow"]:
+            self.jmp()
+
+    
+    def jno(self):
+        if not self.flag_register["Overflow"]:
+            self.jmp()
+
+
+    def js(self):
+        if self.flag_register["Sign"]:
+            self.jmp()
+
+
+    def jns(self):
+        if not self.flag_register["Sign"]:
+            self.jmp()
+
+
+    def jp(self):
+        if self.flag_register["Parity"]:
+            self.jmp()
+
+
+    def jnp(self):
+        if not self.flag_register["Parity"]:
+            self.jmp()
 
 
     def add(self):
@@ -174,7 +244,7 @@ class KPU:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
             
-            elif self.instruction.operands[1] in register:
+            if self.instruction.operands[1] in register:
                 register_two_value = int(register[self.instruction.operands[1]])
 
 
@@ -209,7 +279,7 @@ class KPU:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
             
-            elif self.instruction.operands[1] in register:
+            if self.instruction.operands[1] in register:
                 register_two_value = int(register[self.instruction.operands[1]])
 
         # checking if overflow occured
@@ -234,9 +304,6 @@ class KPU:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = new_value
                 break
-                
-        
-
 
 
     def inc(self):
@@ -301,20 +368,13 @@ class KPU:
                 break
 
 
-
-
-
-
-
     def cmp(self):
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
-                break
             
-            elif self.instruction.operands[1] in register:
+            if self.instruction.operands[1] in register:
                 register_two_value = int(register[self.instruction.operands[1]])
-                break
 
         # checking if overflow occured
         if not(self.min_number <= (register_one_value - register_two_value) <= self.max_number):
@@ -403,7 +463,10 @@ class KPU:
 
 
     def push(self):
-        if not(-1 <= self.SP-1 <= len(self.memory)-1):
+
+        self.SP = self.calc_overflow(self.SP)
+
+        if not(0 <= self.SP <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
             return
 
@@ -420,14 +483,15 @@ class KPU:
 
 
     def pop(self):
-        if self.SP+1 > len(self.memory)-1:
-            self.state = Status.MEMORY_ERROR
-            return 
-        
         self.SP += 1
+        self.SP = self.calc_overflow(self.SP)
 
+        if self.SP > len(self.memory)-1:
+            self.state = Status.MEMORY_ERROR
+            return
 
         popped_value = self.memory[self.SP]
+
 
 
         for register in self.registers:
@@ -438,6 +502,7 @@ class KPU:
 
 
     def call(self):
+
         if not(-1 <= self.SP-1 <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
             return
@@ -452,6 +517,7 @@ class KPU:
 
 
     def ret(self):
+
         if self.SP+1 > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
             return 
@@ -468,21 +534,6 @@ class KPU:
 
     def hlt(self):
         self.state = Status.HALTED
-
-
-
-
-
-
-
-
-    def reset(self) -> None:
-        # TODO
-        pass
-
-
-
-
 
 
     def validate_instruction(self):
@@ -629,18 +680,3 @@ class KPU:
             
 
         return None
-
-
-
-
-
-
-
-if __name__ == "__main__":
-    cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
-    program = [
-        Instruction(Operation.HLT, [])
-    ]
-print(cpu.run_program(program))
-
-print(cpu.registers)
