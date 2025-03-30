@@ -78,7 +78,7 @@ class KPU:
         self.operations = operations
 
         # init of special registers
-        self.PC = 0
+        self.PC = -1
         self.SP = len(self.memory) - 1
         self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
 
@@ -99,17 +99,18 @@ class KPU:
             if self.state != Status.OK:
                 return self.end_program()
             
+            # incrementing PC
+            self.PC += 1
+            
             # PC register points to invalid instruction index
-            if not (0 <= self.PC <= self.len_code):
+            if not (0 <= self.PC <= self.len_code-1):
                 self.state = Status.MEMORY_ERROR
                 return self.end_program()
             
             # loading current instruction
             self.instruction = code[self.PC]
 
-            # incrementing PC and overflow handling
-            self.PC += 1
-            self.PC = self.PC % self.len_code
+
 
 
             output = self.validate_instruction()
@@ -428,8 +429,8 @@ class KPU:
         self.SP -= 1
 
         if not(0 <= self.SP <= len(self.memory)-1):
-            print(self.SP)
-            print("Hre")
+            # print(self.SP)
+            # print("Hre")
             self.state = Status.MEMORY_ERROR
             return
 
@@ -518,10 +519,10 @@ class KPU:
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
                 
-            if self.instruction.op.name in {"PUSH", "POP"}:
-                if not(0 <= self.SP <= len(self.memory)-1):
-                    self.state = Status.MEMORY_ERROR
-                    return self.end_program()
+            # if self.instruction.op.name in {"PUSH", "POP"}:
+            #     if not(-1 <= self.SP <= len(self.memory)-1):
+            #         self.state = Status.MEMORY_ERROR
+            #         return self.end_program()
 
 
 
@@ -630,28 +631,45 @@ class KPU:
 
 
 
-
-
-
 if __name__ == "__main__":
     cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
     program = [
         Instruction(Operation.SET, ["AX", "8"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),       
-        Instruction(Operation.CALL, ["12"]),
+        Instruction(Operation.SET, ["AX", "8"]),
+        Instruction(Operation.SET, ["AX", "8"]),
 
-
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.PUSH, ["AX"]),
-        Instruction(Operation.HLT, []),
 
     ]
     print(cpu.run_program(program))
     print(cpu.registers)
+
+
+
+
+
+
+
+
+
+# if __name__ == "__main__":
+#     cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
+#     program = [
+#         Instruction(Operation.SET, ["AX", "8"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),       
+#         Instruction(Operation.CALL, ["12"]),
+
+
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.PUSH, ["AX"]),
+#         Instruction(Operation.HLT, []),
+
+#     ]
+#     print(cpu.run_program(program))
+#     print(cpu.registers)
