@@ -78,7 +78,7 @@ class KPU:
         self.operations = operations
 
         # init of special registers
-        self.PC = -1
+        self.PC = 0
         self.SP = len(self.memory) - 1
         self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
 
@@ -99,20 +99,21 @@ class KPU:
             if self.state != Status.OK:
                 return self.end_program()
             
-            # incrementing PC
-            self.PC += 1
-            self.PC = self.PC % (self.max_number+1)
-            
             # PC register points to invalid instruction index
             if not (0 <= self.PC <= self.len_code-1):
                 self.state = Status.MEMORY_ERROR
                 return self.end_program()
             
+
             # loading current instruction
             self.instruction = code[self.PC]
+            
+            # incrementing PC
+            self.PC += 1
+            self.PC = self.PC % (self.max_number+1)
+            
 
-
-
+            
 
             output = self.validate_instruction()
             if output is not None:
@@ -158,6 +159,13 @@ class KPU:
             count_ones = bin(result).count('1')
         
         return count_ones % 2 == 0
+
+
+    def jmp(self):
+        pass
+
+
+
 
 
 
@@ -411,9 +419,6 @@ class KPU:
 
 
 
-
-
-
     def pop(self):
         if self.SP+1 > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
@@ -432,7 +437,6 @@ class KPU:
 
 
 
-
     def call(self):
         if not(-1 <= self.SP-1 <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
@@ -443,7 +447,7 @@ class KPU:
         
         instruction_index = int(self.instruction.operands[0])
 
-        self.PC = instruction_index - 1
+        self.PC = instruction_index
 
 
 
@@ -458,10 +462,9 @@ class KPU:
         self.PC = ret_address
 
 
-
-
     def nop(self):
         pass
+
 
     def hlt(self):
         self.state = Status.HALTED
@@ -634,12 +637,10 @@ class KPU:
 
 
 if __name__ == "__main__":
-    cpu = KPU(20, {"A", "B"}, 0, 255)
-
+    cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
     program = [
-    Instruction(Operation.CALL, ['300']),
-    Instruction(Operation.HLT, []),
-]
-    
+        Instruction(Operation.HLT, [])
+    ]
 print(cpu.run_program(program))
+
 print(cpu.registers)
