@@ -93,13 +93,14 @@ class KPU:
 
 
     def run_program(self, code: list[Instruction]) -> tuple[Status, list[int], int]:
+        self.len_code = len(code)
         while True:
             # status is not OK
             if self.state != Status.OK:
                 return self.end_program()
             
             # PC register points to invalid instruction index
-            if not (0 <= self.PC <= len(code)):
+            if not (0 <= self.PC <= self.len_code):
                 self.state = Status.MEMORY_ERROR
                 return self.end_program()
             
@@ -108,7 +109,7 @@ class KPU:
 
             # incrementing PC and overflow handling
             self.PC += 1
-            self.PC = self.PC % len(code)
+            self.PC = self.PC % self.len_code
 
 
             output = self.validate_instruction()
@@ -188,6 +189,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = new_value
+                break
 
 
 
@@ -221,6 +223,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = new_value
+                break
                 
         
 
@@ -230,6 +233,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
+                break
 
         # checking if overflow occured
         if not(self.min_number <= (register_one_value + 1) <= self.max_number):
@@ -251,6 +255,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = new_value
+                break
 
 
 
@@ -260,6 +265,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
+                break
 
         # checking if overflow occured
         if not(self.min_number <= (register_one_value - 1) <= self.max_number):
@@ -282,6 +288,7 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = new_value
+                break
 
 
 
@@ -293,9 +300,11 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register_one_value = int(register[self.instruction.operands[0]])
+                break
             
             elif self.instruction.operands[1] in register:
                 register_two_value = int(register[self.instruction.operands[1]])
+                break
 
         # checking if overflow occured
         if not(self.min_number <= (register_one_value - register_two_value) <= self.max_number):
@@ -316,7 +325,61 @@ class KPU:
 
 
 
+    def read(self):
+        # address
+        if self.instruction.operands[1].isdecimal():
+            address = int(self.instruction.operands[1])
 
+        # register
+        else:
+            for register in self.registers:
+                if self.instruction.operands[1] in register:
+                    address = int(register[self.instruction.operands[1]])
+                    break
+
+        
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = self.memory[address]
+                break
+       
+
+
+
+    def write(self):
+        # address
+        if self.instruction.operands[0].isdecimal():
+            address = int(self.instruction.operands[0])
+
+        # register
+        else:
+            for register in self.registers:
+                if self.instruction.operands[0] in register:
+                    address = int(register[self.instruction.operands[0]])
+                    break
+
+        
+
+        for register in self.registers:
+            if self.instruction.operands[1] in register:
+                new_value = register[self.instruction.operands[1]]
+                break
+
+        self.memory[address] = new_value
+
+
+
+    def mov(self):
+        for register in self.registers:
+            if self.instruction.operands[1] in register:
+                moving_value = register[self.instruction.operands[1]]
+                break
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = moving_value
+                break
 
 
 
@@ -324,6 +387,68 @@ class KPU:
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 register[self.instruction.operands[0]] = int(self.instruction.operands[1])
+                break
+
+
+
+
+    def push(self):
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                push_value = register[self.instruction.operands[0]]
+                break
+
+        self.memory[self.SP] = push_value
+        self.SP -= 1
+
+
+
+
+    def pop(self):
+        self.SP += 1
+        if self.SP > len(self.memory)-1:
+            self.state = Status.MEMORY_ERROR
+            return 
+
+        popped_value = self.memory[self.SP]
+
+
+        for register in self.registers:
+            if self.instruction.operands[0] in register:
+                register[self.instruction.operands[0]] = popped_value
+                break
+
+
+
+
+    def call(self):
+        instruction_index = int(self.instruction.operands[0])
+
+        self.memory[self.SP] = self.PC
+        self.SP -= 1
+
+        if not(0 <= self.SP <= len(self.memory)-1):
+            print(self.SP)
+            print("Hre")
+            self.state = Status.MEMORY_ERROR
+            return
+
+        self.PC = instruction_index
+
+
+
+    def ret(self):
+        self.SP += 1
+        if self.SP > len(self.memory)-1:
+            self.state = Status.MEMORY_ERROR
+            return 
+
+        ret_address = self.memory[self.SP]
+        self.PC = ret_address
+
+
+
+
 
 
     def hlt(self):
@@ -392,12 +517,18 @@ class KPU:
                 if register not in self.register_record:
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
-         
+                
+            if self.instruction.op.name in {"PUSH", "POP"}:
+                if not(0 <= self.SP <= len(self.memory)-1):
+                    self.state = Status.MEMORY_ERROR
+                    return self.end_program()
+
+
+
         elif self.instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
-            if not(self.instruction.operands[0].isdecimal()) or not(self.min_number <= int(self.instruction.operands[0]) <= self.max_number):
+            if not(self.instruction.operands[0].isdecimal()) or not(0 <= int(self.instruction.operands[0]) <= self.len_code-1):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
-        
 
 
 
@@ -503,11 +634,24 @@ class KPU:
 
 
 if __name__ == "__main__":
-    cpu = KPU(15, {"AX", "BX"}, -50, 255)
+    cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
     program = [
-        Instruction(Operation.SET, ["AX", "-50"]),
-        Instruction(Operation.SET, ["BX", "50"]),
-        Instruction(Operation.CMP, ["AX", "BX"]),
+        Instruction(Operation.SET, ["AX", "8"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),       
+        Instruction(Operation.CALL, ["12"]),
+
+
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
         Instruction(Operation.HLT, []),
+
     ]
     print(cpu.run_program(program))
+    print(cpu.registers)
