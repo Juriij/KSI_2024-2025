@@ -111,15 +111,18 @@ class KPU:
             self.pc %= self.max_number + 1
 
             output = self.validate_instruction()
-            if output is not None:
+            if output != "passed":
                 return output
 
             output = self.validate_operands()
-            if output is not None:
+            if output != "passed":
                 return output
 
             # perform instruction
             self.operation = getattr(self, self.instruction.op.name.lower(), None)
+
+            if self.operation is None:
+                raise Exception("Error: operation is None")
 
             # reset flag register if arithmetic operation is due to execution
             if self.instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP"}:
@@ -158,7 +161,7 @@ class KPU:
 
         if not (self.min_number <= new_value <= self.max_number):
             self.state = Status.BAD_OPERAND
-            return
+            return ''
 
         for register in self.registers:
             if self.instruction.operands[0] in register:
@@ -407,7 +410,7 @@ class KPU:
 
         if not (0 <= self.sp <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
-            return
+            return ''
 
         for register in self.registers:
             if self.instruction.operands[0] in register:
@@ -423,7 +426,7 @@ class KPU:
 
         if self.sp > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
-            return
+            return ''
 
         popped_value = self.memory[self.sp]
 
@@ -435,7 +438,7 @@ class KPU:
     def call(self):
         if not (-1 <= self.sp-1 <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
-            return
+            return ''
 
         self.memory[self.sp] = self.pc
         self.sp -= 1
@@ -448,7 +451,7 @@ class KPU:
 
         if self.sp+1 > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
-            return
+            return ''
 
         self.sp += 1
 
@@ -473,7 +476,7 @@ class KPU:
                 self.state = Status.BAD_INSTRUCTION
                 return self.end_program()
 
-        return None
+        return 'passed'
 
     def validate_amount_params(self):
         if self.instruction.op.name in {"ADD", "SUB", "CMP", "READ", "WRITE", "MOV", "SET"}:
@@ -586,4 +589,4 @@ class KPU:
             if not (self.min_number <= int(self.instruction.operands[1]) <= self.max_number):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
-        return None
+        return 'passed'
