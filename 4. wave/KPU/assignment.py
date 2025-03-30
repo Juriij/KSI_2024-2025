@@ -104,6 +104,9 @@ class KPU:
             
             # PC register points to invalid instruction index
             if not (0 <= self.PC <= self.len_code-1):
+                print("hehrere")
+                print(self.PC)
+
                 self.state = Status.MEMORY_ERROR
                 return self.end_program()
             
@@ -394,6 +397,12 @@ class KPU:
 
 
     def push(self):
+        if not(-1 <= self.SP-1 <= len(self.memory)-1):
+            self.state = Status.MEMORY_ERROR
+            return
+
+
+
         for register in self.registers:
             if self.instruction.operands[0] in register:
                 push_value = register[self.instruction.operands[0]]
@@ -405,11 +414,15 @@ class KPU:
 
 
 
+
+
     def pop(self):
-        self.SP += 1
-        if self.SP > len(self.memory)-1:
+        if self.SP+1 > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
             return 
+        
+        self.SP += 1
+
 
         popped_value = self.memory[self.SP]
 
@@ -423,26 +436,25 @@ class KPU:
 
 
     def call(self):
-        instruction_index = int(self.instruction.operands[0])
-
-        self.memory[self.SP] = self.PC
-        self.SP -= 1
-
-        if not(0 <= self.SP <= len(self.memory)-1):
-            # print(self.SP)
-            # print("Hre")
+        if not(-1 <= self.SP-1 <= len(self.memory)-1):
             self.state = Status.MEMORY_ERROR
             return
+        
+        self.memory[self.SP] = self.PC
+        self.SP -= 1
+        
+        instruction_index = int(self.instruction.operands[0])
 
-        self.PC = instruction_index
+        self.PC = instruction_index - 1
 
 
 
     def ret(self):
-        self.SP += 1
-        if self.SP > len(self.memory)-1:
+        if self.SP+1 > len(self.memory)-1:
             self.state = Status.MEMORY_ERROR
             return 
+        
+        self.SP += 1
 
         ret_address = self.memory[self.SP]
         self.PC = ret_address
@@ -518,11 +530,6 @@ class KPU:
                 if register not in self.register_record:
                     self.state = Status.BAD_OPERAND
                     return self.end_program()
-                
-            # if self.instruction.op.name in {"PUSH", "POP"}:
-            #     if not(-1 <= self.SP <= len(self.memory)-1):
-            #         self.state = Status.MEMORY_ERROR
-            #         return self.end_program()
 
 
 
@@ -631,45 +638,28 @@ class KPU:
 
 
 
+
+
+
+
+
+
 if __name__ == "__main__":
     cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
     program = [
         Instruction(Operation.SET, ["AX", "8"]),
-        Instruction(Operation.SET, ["AX", "8"]),
-        Instruction(Operation.SET, ["AX", "8"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),
+        Instruction(Operation.PUSH, ["AX"]),       
+        Instruction(Operation.CALL, ["7"]),
 
+
+        Instruction(Operation.HLT, []),
+
+        Instruction(Operation.SET, ["AX", "38"]),
+        Instruction(Operation.RET, []),
 
     ]
-    print(cpu.run_program(program))
-    print(cpu.registers)
-
-
-
-
-
-
-
-
-
-# if __name__ == "__main__":
-#     cpu = KPU(5, {"AX", "BX", "CX"}, -50, 255)
-#     program = [
-#         Instruction(Operation.SET, ["AX", "8"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),       
-#         Instruction(Operation.CALL, ["12"]),
-
-
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.PUSH, ["AX"]),
-#         Instruction(Operation.HLT, []),
-
-#     ]
-#     print(cpu.run_program(program))
-#     print(cpu.registers)
+print(cpu.run_program(program))
+print(cpu.registers)
