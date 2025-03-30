@@ -101,7 +101,7 @@ class KPU:
             
             # incrementing PC
             self.PC += 1
-            self.PC = self.PC % self.max_number+1
+            self.PC = self.PC % (self.max_number+1)
             
             # PC register points to invalid instruction index
             if not (0 <= self.PC <= self.len_code-1):
@@ -129,7 +129,7 @@ class KPU:
             # reset flag register if arithmetic operation is due to execution 
             if self.instruction.op.name in {"ADD", "SUB", "INC", "DEC", "CMP"}:
                 self.flag_register = {"Overflow": False, "Sign": False, "Zero": False, "Parity": False}
-
+    
             self.operation()
 
 
@@ -532,7 +532,7 @@ class KPU:
 
 
         elif self.instruction.op.name in {"CALL", "JMP", "JZ", "JNZ", "JO", "JNO", "JS", "JNS", "JP", "JNP"}:
-            if not(self.instruction.operands[0].isdecimal()):
+            if not(self.instruction.operands[0].isdecimal()) or not(self.min_number <= int(self.instruction.operands[0]) <= self.max_number):
                 self.state = Status.BAD_OPERAND
                 return self.end_program()
 
@@ -634,12 +634,11 @@ class KPU:
 
 
 if __name__ == "__main__":
-    cpu = KPU(2, {"A", "B"}, 0, 5)
+    cpu = KPU(20, {"A", "B"}, 0, 255)
 
     program = [
-    Instruction(Operation.NOP, []),
-    Instruction(Operation.NOP, []),
-    Instruction(Operation.NOP, []),
+    Instruction(Operation.CALL, ['300']),
+    Instruction(Operation.HLT, []),
 ]
     
 print(cpu.run_program(program))
